@@ -1,4 +1,4 @@
 MyOpenProjects
 ============
 
-Reposity of My Pattern Recognition Projects
+Repository of My Pattern Recognition Projects
