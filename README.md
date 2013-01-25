@@ -1,4 +1,4 @@
-ChnAutoPlate
+MyOpenProjects
 ============
 
-Recognition Auto plate of China
+Reposity of My Pattern Recognition Projects
