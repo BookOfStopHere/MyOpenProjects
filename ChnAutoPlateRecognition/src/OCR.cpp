@@ -149,8 +149,9 @@ vector<CharSegment> OCR::segment(Plate plate){
         ++itc;
     }
 
-    if(showSteps) {
-        cout << "OCR Num chars: " << output.size() << "\n";
+//    if(showSteps)
+    {
+        cout << "OCR number of chars: " << output.size() << "\n";
         imshow("OCR Chars", result);
         cvWaitKey(0);
     }

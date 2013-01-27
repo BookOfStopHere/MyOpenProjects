@@ -130,9 +130,17 @@ vector<Plate> DetectRegions::segment(Mat input){
         //For better rect cropping for each possible box
         //Make floodfill algorithm because the plate has white background
         //And then we can retrieve more clearly the contour box
-        circle(result, rects[i].center, 3, Scalar(0,255,0), -1);
+        circle(result, rects[i].center, 3, Scalar(0,255,0), -1);	//Green
         //get the min size between width and height
         float minSize=(rects[i].size.width < rects[i].size.height)?rects[i].size.width:rects[i].size.height;
+//        //show four point of rects[i]
+//        Point2f vertices[4];
+//        rects[i].points(vertices);
+//        for (int n = 0; n < 4; n++)
+//        	cout << "Possible region rect[" << i << "] of plate: "
+//        			<< "x=" << vertices[n].x << ", y=" << vertices[n].y << "\n";
+//            line(image, vertices[i], vertices[(i+1)%4], Scalar(0,255,0));
+        //
         minSize = minSize - minSize*0.5;
         //initialize rand and get 10 points around center for floodfill algorithm
         srand ( time(NULL) );
@@ -192,8 +200,13 @@ vector<Plate> DetectRegions::segment(Mat input){
             //Drawing the rotated rectangle
             Point2f rect_points[4];
             minRect.points( rect_points );
-            for( int j = 0; j < 4; j++ )
+			cout << "Rectangle region of possible plate: \n";
+            cout << "\tcenter of x=" << minRect.center.x << ", y=" << minRect.center.y
+            		<< ", angle=" << minRect.angle << "\n";
+            for( int j = 0; j < 4; j++ ) {
                 line( result, rect_points[j], rect_points[(j+1)%4], Scalar(0,0,255), 1, 8 );    
+				cout << "\tvertices of x=" << rect_points[j].x << ", y=" << rect_points[j].y << "\n";
+            }
 
             //Get rotation matrix ???
             float r = (float)minRect.size.width / (float)minRect.size.height;
