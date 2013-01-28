@@ -111,23 +111,36 @@ vector<Plate> DetectRegions::segment(Mat input){
         }else{
             ++itc;
             rects.push_back(mr);
+
+            int inRect = pointPolygonTest(Mat(*itc), mr.center, true);
+            cout << "Contours center point(" << mr.center.x << "," << mr.center.y << ") status=" << inRect << "\n";
         }
     }
 
-    //TODO: Draw blue contours on a white image
+    //Draw blue contours on a white image
     cv::Mat result;
     input.copyTo(result);
     cv::drawContours(result,contours,
             -1, // draw all contours
             cv::Scalar(255,0,0), // in blue
             1); // with a thickness of 1
+
 //    if(showSteps) {
 //    	imshow("Result with Contours", result);
 //    	cvWaitKey(0);
 //    }
 
     for(int i=0; i< rects.size(); i++){
-        //For better rect cropping for each possible box
+        //Draw green minAreaRect on the image
+		Point2f vertices[4];
+		rects[i].points(vertices);
+		for (int n = 0; n < 4; n++)
+			line(result, vertices[n], vertices[(n+1)%4], Scalar(0,255,0));	//Green
+//		//TODO: Judge if center point is in rect
+//		int inRect = pointPolygonTest(Mat(vertices), rects[i].center, false);
+//		cout << "minRect center point(" << rects[i].center.x << "," << rects[i].center.y << ") status=" << inRect << "\n";
+
+    	//For better rect cropping for each possible box
         //Make floodfill algorithm because the plate has white background
         //And then we can retrieve more clearly the contour box
         circle(result, rects[i].center, 3, Scalar(0,255,0), -1);	//Green
@@ -157,7 +170,7 @@ vector<Plate> DetectRegions::segment(Mat input){
 //        int flags = connectivity + CV_FLOODFILL_FIXED_RANGE + CV_FLOODFILL_MASK_ONLY;
         int flags2 = connectivity + (newMaskVal << 8 ) + CV_FLOODFILL_FIXED_RANGE;
 //        int flags2 = connectivity + CV_FLOODFILL_FIXED_RANGE;
-        int NumSeeds = 20;	//10
+        int NumSeeds = 10;	//10
         Rect ccomp;
         cv::Mat input2;
         for(int j = 0; j < NumSeeds; j++) {
@@ -165,14 +178,16 @@ vector<Plate> DetectRegions::segment(Mat input){
             seed.x = rects[i].center.x + rand()%(int)minSize - (minSize/2);
             seed.y = rects[i].center.y + rand()%(int)minSize - (minSize/2);
 //TODO: To set the seed point properly
+//	pointPolygonTest
 //            seed.x = rects[i].center.x - rects[i].size.width / 3;
 //            seed.y = rects[i].center.y - rects[i].size.height / 3;
 
-            circle(result, seed, 3, Scalar(0,0,255), -1);	//Center of box
+            circle(result, seed, 1, Scalar(0,0,255), -1);	//Draw seed point with Red
+
             int area = floodFill(input, mask, seed, Scalar(0,255,255), &ccomp,	//Yellow
             				Scalar(loDiff, loDiff, loDiff), Scalar(upDiff, upDiff, upDiff), flags);
 
-            //TODO: Test the floodfilling
+            //TODO: Show the result of floodfilling
             input.copyTo(input2);
             int area2 = floodFill(input2, seed, Scalar(0,255,255), &ccomp,
             				Scalar(loDiff, loDiff, loDiff), Scalar(upDiff, upDiff, upDiff), flags2);
@@ -200,9 +215,13 @@ vector<Plate> DetectRegions::segment(Mat input){
             //Drawing the rotated rectangle
             Point2f rect_points[4];
             minRect.points( rect_points );
-			cout << "Rectangle region of possible plate: \n";
-            cout << "\tcenter of x=" << minRect.center.x << ", y=" << minRect.center.y
-            		<< ", angle=" << minRect.angle << "\n";
+
+            if(showSteps) {
+				cout << "Rectangle region of possible plate: \n";
+				cout << "\tcenter of x=" << minRect.center.x << ", y=" << minRect.center.y
+						<< ", angle=" << minRect.angle << "\n";
+            }
+
             for( int j = 0; j < 4; j++ ) {
                 line( result, rect_points[j], rect_points[(j+1)%4], Scalar(0,0,255), 1, 8 );    
 				cout << "\tvertices of x=" << rect_points[j].x << ", y=" << rect_points[j].y << "\n";
