@@ -112,8 +112,14 @@ vector<Plate> DetectRegions::segment(Mat input){
             ++itc;
             rects.push_back(mr);
 
-            int inRect = pointPolygonTest(Mat(*itc), mr.center, true);
-            cout << "Contours center point(" << mr.center.x << "," << mr.center.y << ") status=" << inRect << "\n";
+            //FillPoly
+            Mat imgPoly = Mat::zeros(input.rows, input.cols, CV_8UC1);
+            fillPoly(imgPoly, Mat(*itc), 255);
+            imshow("Fill Poly", imgPoly);
+            cvWaitKey(0);
+
+//            int inRect = pointPolygonTest(Mat(*itc), mr.center, true);
+//            cout << "Contours center point(" << mr.center.x << "," << mr.center.y << ") status=" << inRect << "\n";
         }
     }
 
