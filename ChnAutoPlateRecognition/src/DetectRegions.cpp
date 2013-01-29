@@ -75,21 +75,21 @@ vector<Plate> DetectRegions::segment(Mat input){
     //Finde vertical lines. Car plates have high density of vertical lines
     Mat img_sobel;
     Sobel(img_gray, img_sobel, CV_8U, 1, 0, 3, 1, 0, BORDER_DEFAULT);
-    if(showSteps)
-        imshow("Sobel", img_sobel);
+//    if(showSteps)
+//        imshow("Sobel", img_sobel);
 
     //threshold image
     Mat img_threshold;
     threshold(img_sobel, img_threshold, 0, 255, CV_THRESH_OTSU+CV_THRESH_BINARY);
-    if(showSteps)
-        imshow("Threshold", img_threshold);
+//    if(showSteps)
+//        imshow("Threshold", img_threshold);
 
     //Morphplogic operation close
 //    Mat element = getStructuringElement(MORPH_RECT, Size(17, 3) );
     Mat element = getStructuringElement(MORPH_RECT, Size(15, 3) );
     morphologyEx(img_threshold, img_threshold, CV_MOP_CLOSE, element);
-    if(showSteps)
-        imshow("Close", img_threshold);
+//    if(showSteps)
+//        imshow("Close", img_threshold);
 
     //Find contours of possibles plates
     vector< vector< Point> > contours;
@@ -112,11 +112,11 @@ vector<Plate> DetectRegions::segment(Mat input){
             ++itc;
             rects.push_back(mr);
 
-            //FillPoly
-            Mat imgPoly = Mat::zeros(input.rows, input.cols, CV_8UC1);
-            fillPoly(imgPoly, Mat(*itc), 255);
-            imshow("Fill Poly", imgPoly);
-            cvWaitKey(0);
+//            //FillPoly
+//            Mat imgPoly = Mat::zeros(input.rows, input.cols, CV_8UC1);
+//            fillPoly(imgPoly, Mat(*itc), 255);
+//            imshow("Fill Poly", imgPoly);
+//            cvWaitKey(0);
 
 //            int inRect = pointPolygonTest(Mat(*itc), mr.center, true);
 //            cout << "Contours center point(" << mr.center.x << "," << mr.center.y << ") status=" << inRect << "\n";
@@ -137,21 +137,50 @@ vector<Plate> DetectRegions::segment(Mat input){
 //    }
 
     for(int i=0; i< rects.size(); i++){
-        //Draw green minAreaRect on the image
+        //Draw green minAreaRect with Green
 		Point2f vertices[4];
 		rects[i].points(vertices);
 		for (int n = 0; n < 4; n++)
 			line(result, vertices[n], vertices[(n+1)%4], Scalar(0,255,0));	//Green
+		//Show the index of rects
+		char str1[5];
+		sprintf(str1, "%d", i);
+		putText(result, str1, vertices[0], CV_FONT_HERSHEY_SIMPLEX, 1, Scalar(0,255,0), 2);
+
 //		//TODO: Judge if center point is in rect
 //		int inRect = pointPolygonTest(Mat(vertices), rects[i].center, false);
 //		cout << "minRect center point(" << rects[i].center.x << "," << rects[i].center.y << ") status=" << inRect << "\n";
 
     	//For better rect cropping for each possible box
         //Make floodfill algorithm because the plate has white background
-        //And then we can retrieve more clearly the contour box
-        circle(result, rects[i].center, 3, Scalar(0,255,0), -1);	//Green
-        //get the min size between width and height
-        float minSize=(rects[i].size.width < rects[i].size.height)?rects[i].size.width:rects[i].size.height;
+        //And then we can retrieve the contour box more clearly
+        circle(result, rects[i].center, 3, Scalar(0,255,0), -1);	//Green for center point
+
+        //get the min and max size between width and height
+        float minSize=(rects[i].size.width < rects[i].size.height)? rects[i].size.width: rects[i].size.height;
+        minSize = minSize - minSize*0.5;
+
+        float maxSize=(rects[i].size.width > rects[i].size.height)? rects[i].size.width: rects[i].size.height;
+        maxSize = maxSize / 6;
+        Point ptSample;
+        if(rects[i].size.width > rects[i].size.height) {
+            ptSample.x = rects[i].center.x - maxSize * cos(rects[i].angle);
+            ptSample.y = rects[i].center.y - maxSize * sin(rects[i].angle);
+        } else {
+            ptSample.x = rects[i].center.x - maxSize * sin(rects[i].angle);
+            ptSample.y = rects[i].center.y - maxSize * cos(rects[i].angle);
+        }
+        circle(result, ptSample, 3, Scalar(0,255,255), -1);	//Yellow for sample point
+
+        if(showSteps) {
+			cout << "GREEN Rectangle[" << i << "] region of possible plate: \n";
+			cout << "center point x=" << rects[i].center.x << ", y=" << rects[i].center.y << "\n"
+					<< "sample point x=" << ptSample.x << ", y=" << ptSample.y << "\n"
+					<< "width=" << rects[i].size.width << ", height=" << rects[i].size.height
+					<< ", angle=" << rects[i].angle << "\n";
+        }
+
+
 //        //show four point of rects[i]
 //        Point2f vertices[4];
 //        rects[i].points(vertices);
@@ -159,8 +188,8 @@ vector<Plate> DetectRegions::segment(Mat input){
 //        	cout << "Possible region rect[" << i << "] of plate: "
 //        			<< "x=" << vertices[n].x << ", y=" << vertices[n].y << "\n";
 //            line(image, vertices[i], vertices[(i+1)%4], Scalar(0,255,0));
+
         //
-        minSize = minSize - minSize*0.5;
         //initialize rand and get 10 points around center for floodfill algorithm
         srand ( time(NULL) );
         //Initialize floodfill parameters and variables
@@ -222,15 +251,18 @@ vector<Plate> DetectRegions::segment(Mat input){
             Point2f rect_points[4];
             minRect.points( rect_points );
 
-            if(showSteps) {
-				cout << "Rectangle region of possible plate: \n";
-				cout << "\tcenter of x=" << minRect.center.x << ", y=" << minRect.center.y
-						<< ", angle=" << minRect.angle << "\n";
-            }
+//            //Show the parameters of RotatedRect
+//            if(showSteps) {
+//				cout << "RED Rectangle region of possible plate: \n";
+//				cout << "\tcenter of x=" << minRect.center.x << ", y=" << minRect.center.y
+//						<< ", width=" << minRect.size.width << ", height=" << minRect.size.height
+//						<< ", angle=" << minRect.angle << "\n";
+//            }
 
+            //Draw the RotatedRect with Red
             for( int j = 0; j < 4; j++ ) {
                 line( result, rect_points[j], rect_points[(j+1)%4], Scalar(0,0,255), 1, 8 );    
-				cout << "\tvertices of x=" << rect_points[j].x << ", y=" << rect_points[j].y << "\n";
+//				cout << "\tvertex[" << j << "] x=" << rect_points[j].x << ", y=" << rect_points[j].y << "\n";
             }
 
             //Get rotation matrix ???
