@@ -75,21 +75,21 @@ vector<Plate> DetectRegions::segment(Mat input){
     //Finde vertical lines. Car plates have high density of vertical lines
     Mat img_sobel;
     Sobel(img_gray, img_sobel, CV_8U, 1, 0, 3, 1, 0, BORDER_DEFAULT);
-//    if(showSteps)
-//        imshow("Sobel", img_sobel);
+    if(showSteps)
+        imshow("Sobel", img_sobel);
 
     //threshold image
     Mat img_threshold;
     threshold(img_sobel, img_threshold, 0, 255, CV_THRESH_OTSU+CV_THRESH_BINARY);
-//    if(showSteps)
-//        imshow("Threshold", img_threshold);
+    if(showSteps)
+        imshow("Threshold", img_threshold);
 
     //Morphplogic operation close
 //    Mat element = getStructuringElement(MORPH_RECT, Size(17, 3) );
     Mat element = getStructuringElement(MORPH_RECT, Size(15, 3) );
     morphologyEx(img_threshold, img_threshold, CV_MOP_CLOSE, element);
-//    if(showSteps)
-//        imshow("Close", img_threshold);
+    if(showSteps)
+        imshow("Close", img_threshold);
 
     //Find contours of possibles plates
     vector< vector< Point> > contours;
@@ -140,16 +140,13 @@ vector<Plate> DetectRegions::segment(Mat input){
         //Draw green minAreaRect with Green
 		Point2f vertices[4];
 		rects[i].points(vertices);
+
 		for (int n = 0; n < 4; n++)
 			line(result, vertices[n], vertices[(n+1)%4], Scalar(0,255,0));	//Green
 		//Show the index of rects
 		char str1[5];
 		sprintf(str1, "%d", i);
 		putText(result, str1, vertices[0], CV_FONT_HERSHEY_SIMPLEX, 1, Scalar(0,255,0), 2);
-
-//		//TODO: Judge if center point is in rect
-//		int inRect = pointPolygonTest(Mat(vertices), rects[i].center, false);
-//		cout << "minRect center point(" << rects[i].center.x << "," << rects[i].center.y << ") status=" << inRect << "\n";
 
     	//For better rect cropping for each possible box
         //Make floodfill algorithm because the plate has white background
@@ -160,36 +157,85 @@ vector<Plate> DetectRegions::segment(Mat input){
         float minSize=(rects[i].size.width < rects[i].size.height)? rects[i].size.width: rects[i].size.height;
         minSize = minSize - minSize*0.5;
 
-        float maxSize=(rects[i].size.width > rects[i].size.height)? rects[i].size.width: rects[i].size.height;
-        maxSize = maxSize / 6;
-        Point ptSample;
-        if(rects[i].size.width > rects[i].size.height) {
-            ptSample.x = rects[i].center.x - maxSize * cos(rects[i].angle);
-            ptSample.y = rects[i].center.y - maxSize * sin(rects[i].angle);
+        //Radius and Angle, radian=angle*Pi/180, angle=radian*180/Pi
+        float bevelSize1, bevelSize2, bevelSize3, bevelSize4;
+        float angleAlpha, angleBeta1, angleTheta1, angleBeta2, angleTheta2, angleBeta3, angleTheta3, angleBeta4, angleTheta4;
+        angleAlpha = abs(rects[i].angle * 3.1415 / 180);	//in Radian
+        if((rects[i].size.width > rects[i].size.height)) {
+        	// 1/8
+            bevelSize1 = sqrt(rects[i].size.width * rects[i].size.width * 1/64 + rects[i].size.height * rects[i].size.height /4);
+            angleBeta1 = abs(atan2((rects[i].size.height /2), (rects[i].size.width * 1/8)));
+            angleTheta1 = angleAlpha + angleBeta1;
+            // 3/4
+            bevelSize2 = sqrt(rects[i].size.width * rects[i].size.width * 9/16 + rects[i].size.height * rects[i].size.height /4);
+            angleBeta2 = abs(atan2((rects[i].size.height /2), (rects[i].size.width * 3/4)));
+            angleTheta2 = angleAlpha + angleBeta2;
+        	// 3/8
+            bevelSize3 = sqrt(rects[i].size.width * rects[i].size.width * 9/64 + rects[i].size.height * rects[i].size.height /4);
+            angleBeta3 = abs(atan2((rects[i].size.height /2), (rects[i].size.width * 3/8)));
+            angleTheta3 = angleAlpha + angleBeta3;
+            // 7/8
+            bevelSize4 = sqrt(rects[i].size.width * rects[i].size.width * 49/64 + rects[i].size.height * rects[i].size.height /4);
+            angleBeta4 = abs(atan2((rects[i].size.height /2), (rects[i].size.width * 7/8)));
+            angleTheta4 = angleAlpha + angleBeta4;
         } else {
-            ptSample.x = rects[i].center.x - maxSize * sin(rects[i].angle);
-            ptSample.y = rects[i].center.y - maxSize * cos(rects[i].angle);
+        	// 1/8
+            bevelSize1 = sqrt(rects[i].size.width * rects[i].size.width /4 + rects[i].size.height * rects[i].size.height * 1/64);
+            angleBeta1 = abs(atan2((rects[i].size.height * 1/8), (rects[i].size.width /2)));
+            angleTheta1 = angleAlpha + angleBeta1;
+            // 3/4
+            bevelSize2 = sqrt(rects[i].size.width * rects[i].size.width /4 + rects[i].size.height * rects[i].size.height * 9/16);
+            angleBeta2 = abs(atan2((rects[i].size.height * 3/4), (rects[i].size.width /2)));
+            angleTheta2 = angleAlpha + angleBeta2;
+        	// 3/8
+            bevelSize3 = sqrt(rects[i].size.width * rects[i].size.width /4 + rects[i].size.height * rects[i].size.height * 9/64);
+            angleBeta3 = abs(atan2((rects[i].size.height * 3/8), (rects[i].size.width /2)));
+            angleTheta3 = angleAlpha + angleBeta3;
+        	// 7/8
+            bevelSize4 = sqrt(rects[i].size.width * rects[i].size.width /4 + rects[i].size.height * rects[i].size.height * 49/64);
+            angleBeta4 = abs(atan2((rects[i].size.height * 7/8), (rects[i].size.width /2)));
+            angleTheta4 = angleAlpha + angleBeta4;
         }
-        circle(result, ptSample, 3, Scalar(0,255,255), -1);	//Yellow for sample point
 
-        if(showSteps) {
-			cout << "GREEN Rectangle[" << i << "] region of possible plate: \n";
-			cout << "center point x=" << rects[i].center.x << ", y=" << rects[i].center.y << "\n"
-					<< "sample point x=" << ptSample.x << ", y=" << ptSample.y << "\n"
-					<< "width=" << rects[i].size.width << ", height=" << rects[i].size.height
-					<< ", angle=" << rects[i].angle << "\n";
-        }
+        Point ptSample1, ptSinCos1;
+        ptSinCos1.x = bevelSize1 * sin(angleTheta1);	//sin(angle)
+        ptSinCos1.y = bevelSize1 * cos(angleTheta1);	//cos(angle)
+		ptSample1.x = vertices[0].x + ptSinCos1.y;
+		ptSample1.y = vertices[0].y - ptSinCos1.x;
+        circle(result, ptSample1, 3, Scalar(0,255,255), -1);	//Yellow for sample1 point
 
+        Point ptSample2, ptSinCos2;
+        ptSinCos2.x = bevelSize2 * sin(angleTheta2);	//sin(angle)
+        ptSinCos2.y = bevelSize2 * cos(angleTheta2);	//cos(angle)
+		ptSample2.x = vertices[0].x + ptSinCos2.y;
+		ptSample2.y = vertices[0].y - ptSinCos2.x;
+        circle(result, ptSample2, 3, Scalar(0,255,255), -1);	//Yellow for sample2 point
 
-//        //show four point of rects[i]
-//        Point2f vertices[4];
-//        rects[i].points(vertices);
-//        for (int n = 0; n < 4; n++)
-//        	cout << "Possible region rect[" << i << "] of plate: "
-//        			<< "x=" << vertices[n].x << ", y=" << vertices[n].y << "\n";
-//            line(image, vertices[i], vertices[(i+1)%4], Scalar(0,255,0));
+        Point ptSample3, ptSinCos3;
+        ptSinCos3.x = bevelSize3 * sin(angleTheta3);	//sin(angle)
+        ptSinCos3.y = bevelSize3 * cos(angleTheta3);	//cos(angle)
+		ptSample3.x = vertices[0].x + ptSinCos3.y;
+		ptSample3.y = vertices[0].y - ptSinCos3.x;
+        circle(result, ptSample3, 3, Scalar(0,255,255), -1);	//Yellow for sample3 point
 
-        //
+        Point ptSample4, ptSinCos4;
+        ptSinCos4.x = bevelSize4 * sin(angleTheta4);	//sin(angle)
+        ptSinCos4.y = bevelSize4 * cos(angleTheta4);	//cos(angle)
+		ptSample4.x = vertices[0].x + ptSinCos4.y;
+		ptSample4.y = vertices[0].y - ptSinCos4.x;
+        circle(result, ptSample4, 3, Scalar(0,255,255), -1);	//Yellow for sample4 point
+
+//        //Debug info
+//        if(showSteps) {
+//			cout << "GREEN Rectangle[" << i << "] region of possible plate: \n"
+//					<< "first point x=" << vertices[0].x << ", y=" << vertices[0].y << "\n"
+//					<< "sample1 point x=" << ptSample1.x << ", y=" << ptSample1.y << "\n"
+//					<< "bevelSize1=" << bevelSize1 << ", angleAlpha=" << angleAlpha * 180 / 3.1415 << ", angleBeta1=" << angleBeta1  * 180 / 3.1415 << ", angleTheta1=" << angleTheta1  * 180 / 3.1415 << "\n"
+//					<< "sin()=" << ptSinCos1.x << ", cos()=" << ptSinCos1.y << "\n"
+//					<< "sample2 point x=" << ptSample2.x << ", y=" << ptSample2.y << "\n"
+//					<< "width=" << rects[i].size.width << ", height=" << rects[i].size.height << "\n";
+//        }
+
         //initialize rand and get 10 points around center for floodfill algorithm
         srand ( time(NULL) );
         //Initialize floodfill parameters and variables
@@ -205,27 +251,36 @@ vector<Plate> DetectRegions::segment(Mat input){
 //        int flags = connectivity + CV_FLOODFILL_FIXED_RANGE + CV_FLOODFILL_MASK_ONLY;
         int flags2 = connectivity + (newMaskVal << 8 ) + CV_FLOODFILL_FIXED_RANGE;
 //        int flags2 = connectivity + CV_FLOODFILL_FIXED_RANGE;
-        int NumSeeds = 10;	//10
+        int nSeeds = 28;	//10
         Rect ccomp;
         cv::Mat input2;
-        for(int j = 0; j < NumSeeds; j++) {
+        for(int j = 0; j < nSeeds; j++) {
+        	//TODO: To set the seed point properly
             Point seed;
-            seed.x = rects[i].center.x + rand()%(int)minSize - (minSize/2);
-            seed.y = rects[i].center.y + rand()%(int)minSize - (minSize/2);
-//TODO: To set the seed point properly
-//	pointPolygonTest
-//            seed.x = rects[i].center.x - rects[i].size.width / 3;
-//            seed.y = rects[i].center.y - rects[i].size.height / 3;
-
-            circle(result, seed, 1, Scalar(0,0,255), -1);	//Draw seed point with Red
+//            seed.x = rects[i].center.x + rand()%(int)minSize - (minSize/2);
+//            seed.y = rects[i].center.y + rand()%(int)minSize - (minSize/2);
+            if(j < (nSeeds / 4)) {
+                seed.x = ptSample1.x + rand()%(int)minSize - (minSize/2);
+                seed.y = ptSample1.y + rand()%(int)minSize - (minSize/2);
+            } else if ((j >= (nSeeds /4)) && (j < (nSeeds /2))) {
+                seed.x = ptSample2.x + rand()%(int)minSize - (minSize/2);
+                seed.y = ptSample2.y + rand()%(int)minSize - (minSize/2);
+            } else if ((j >= (nSeeds /2)) && (j < (nSeeds * 3/4))) {
+                seed.x = ptSample3.x + rand()%(int)minSize - (minSize/2);
+                seed.y = ptSample3.y + rand()%(int)minSize - (minSize/2);
+            } else {
+                seed.x = ptSample4.x + rand()%(int)minSize - (minSize/2);
+                seed.y = ptSample4.y + rand()%(int)minSize - (minSize/2);
+            }
+            circle(result, seed, 1, Scalar(0,255,255), -1);	//Draw seed point with Yellow
 
             int area = floodFill(input, mask, seed, Scalar(0,255,255), &ccomp,	//Yellow
             				Scalar(loDiff, loDiff, loDiff), Scalar(upDiff, upDiff, upDiff), flags);
 
-            //TODO: Show the result of floodfilling
-            input.copyTo(input2);
-            int area2 = floodFill(input2, seed, Scalar(0,255,255), &ccomp,
-            				Scalar(loDiff, loDiff, loDiff), Scalar(upDiff, upDiff, upDiff), flags2);
+//            //TODO: Show the result of floodfilling
+//            input.copyTo(input2);
+//            int area2 = floodFill(input2, seed, Scalar(0,255,255), &ccomp,
+//            				Scalar(loDiff, loDiff, loDiff), Scalar(upDiff, upDiff, upDiff), flags2);
         }
 
 //        if(showSteps) {
