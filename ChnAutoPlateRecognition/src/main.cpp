@@ -44,7 +44,7 @@ string getFilename(string s) {
 //Main entry
 int main ( int argc, char** argv )
 {
-    cout << "Automatic Number Plate Recognition\n";
+    cout << "Automatic Number Plate Recognition of China\n";
     char* filename;
     char* strCmdOpt;
     bool bSegmentPlateOnly = false;

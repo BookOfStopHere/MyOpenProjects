@@ -19,7 +19,14 @@ using namespace std;
 using namespace cv;
 
 //TODO: Number of files of each char
-const int numFilesChars[]={35, 40, 42, 41, 42, 33, 30, 31, 49, 44, 30, 24, 21, 20, 34, 9, 10, 3, 11, 3, 15, 4, 9, 12, 10, 21, 18, 8, 15, 7};
+//const int numOfCharFiles[]={35, 40, 42, 41, 42, 33, 30, 31, 49, 44, 30, 24, 21, 20, 34, 9, 10, 3, 11, 3, 15, 4, 9, 12, 10, 21, 18, 8, 15, 7};
+const int numOfCharFiles[] = {
+		15, 5, 13, 8, 8, 10, 5, 7, 16, 9,
+		13, 3, 0, 3, 5, 3, 0,
+		0, 0, 2, 2, 0, 6,
+		2, 0, 0, 4, 0,
+		1, 0, 0, 1, 0, 0
+	};
 
 int main1 ( int argc, char** argv )
 {
@@ -31,8 +38,8 @@ int main1 ( int argc, char** argv )
     if(argc >= 2 ) {
         path= argv[1];
     } else {
-        cout << "Usage:\n\t" << argv[0] << " <path to chars folders files> \n";
-        cout << "\n";
+        cout << "Usage:\t" << argv[0] << " <autoplatechars> \n";
+        cout << "\tautoplatechars: path contained directories for each char files\n\n";
         return 0;
     }        
 
@@ -45,13 +52,13 @@ int main1 ( int argc, char** argv )
     vector<int> trainingLabels;
     OCR ocr;
 
-    for(int i=0; i< OCR::numCharacters; i++)
+    for(int i = 0; i < OCR::numOfChars; i++)
     {
-        int numFiles=numFilesChars[i];
-        for(int j=0; j< numFiles; j++){
-            cout << "Character "<< OCR::strCharacters[i] << " file: " << j << "\n";
+        int numFiles = numOfCharFiles[i];
+        for(int j = 0; j < numFiles; j++){
+            cout << "Processing Char("<< OCR::strChars[i] << ") file name: " << j << ".jpg\n";
             stringstream ss(stringstream::in | stringstream::out);
-            ss << path << OCR::strCharacters[i] << "/" << j << ".jpg";
+            ss << path << "/" << OCR::strChars[i] << "/" << j << ".jpg";
             Mat img=imread(ss.str(), 0);
             Mat f5=ocr.features(img, 5);
             Mat f10=ocr.features(img, 10);

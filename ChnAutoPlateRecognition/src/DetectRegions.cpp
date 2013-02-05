@@ -75,21 +75,21 @@ vector<Plate> DetectRegions::segment(Mat input){
     //Finde vertical lines. Car plates have high density of vertical lines
     Mat img_sobel;
     Sobel(img_gray, img_sobel, CV_8U, 1, 0, 3, 1, 0, BORDER_DEFAULT);
-    if(showSteps)
-        imshow("Sobel", img_sobel);
+//    if(showSteps)
+//        imshow("Sobel", img_sobel);
 
     //threshold image
     Mat img_threshold;
     threshold(img_sobel, img_threshold, 0, 255, CV_THRESH_OTSU+CV_THRESH_BINARY);
-    if(showSteps)
-        imshow("Threshold", img_threshold);
+//    if(showSteps)
+//        imshow("Threshold", img_threshold);
 
     //Morphplogic operation close
 //    Mat element = getStructuringElement(MORPH_RECT, Size(17, 3) );
     Mat element = getStructuringElement(MORPH_RECT, Size(15, 3) );
     morphologyEx(img_threshold, img_threshold, CV_MOP_CLOSE, element);
-    if(showSteps)
-        imshow("Close", img_threshold);
+//    if(showSteps)
+//        imshow("Close", img_threshold);
 
     //Find contours of possibles plates
     vector< vector< Point> > contours;
@@ -141,12 +141,13 @@ vector<Plate> DetectRegions::segment(Mat input){
 		Point2f vertices[4];
 		rects[i].points(vertices);
 
-		for (int n = 0; n < 4; n++)
-			line(result, vertices[n], vertices[(n+1)%4], Scalar(0,255,0));	//Green
-		//Show the index of rects
-		char str1[5];
-		sprintf(str1, "%d", i);
-		putText(result, str1, vertices[0], CV_FONT_HERSHEY_SIMPLEX, 1, Scalar(0,255,0), 2);
+//		//TODO: Show the index of rects
+//		for (int n = 0; n < 4; n++)
+//			line(result, vertices[n], vertices[(n+1)%4], Scalar(0,255,0));	//Green
+
+//		char str1[5];
+//		sprintf(str1, "%d", i);
+//		putText(result, str1, vertices[0], CV_FONT_HERSHEY_SIMPLEX, 1, Scalar(0,255,0), 2);
 
     	//For better rect cropping for each possible box
         //Make floodfill algorithm because the plate has white background
@@ -202,28 +203,28 @@ vector<Plate> DetectRegions::segment(Mat input){
         ptSinCos1.y = bevelSize1 * cos(angleTheta1);	//cos(angle)
 		ptSample1.x = vertices[0].x + ptSinCos1.y;
 		ptSample1.y = vertices[0].y - ptSinCos1.x;
-        circle(result, ptSample1, 3, Scalar(0,255,255), -1);	//Yellow for sample1 point
+//        circle(result, ptSample1, 3, Scalar(0,255,255), -1);	//Yellow for sample1 point
 
         Point ptSample2, ptSinCos2;
         ptSinCos2.x = bevelSize2 * sin(angleTheta2);	//sin(angle)
         ptSinCos2.y = bevelSize2 * cos(angleTheta2);	//cos(angle)
 		ptSample2.x = vertices[0].x + ptSinCos2.y;
 		ptSample2.y = vertices[0].y - ptSinCos2.x;
-        circle(result, ptSample2, 3, Scalar(0,255,255), -1);	//Yellow for sample2 point
+//        circle(result, ptSample2, 3, Scalar(0,255,255), -1);	//Yellow for sample2 point
 
         Point ptSample3, ptSinCos3;
         ptSinCos3.x = bevelSize3 * sin(angleTheta3);	//sin(angle)
         ptSinCos3.y = bevelSize3 * cos(angleTheta3);	//cos(angle)
 		ptSample3.x = vertices[0].x + ptSinCos3.y;
 		ptSample3.y = vertices[0].y - ptSinCos3.x;
-        circle(result, ptSample3, 3, Scalar(0,255,255), -1);	//Yellow for sample3 point
+//        circle(result, ptSample3, 3, Scalar(0,255,255), -1);	//Yellow for sample3 point
 
         Point ptSample4, ptSinCos4;
         ptSinCos4.x = bevelSize4 * sin(angleTheta4);	//sin(angle)
         ptSinCos4.y = bevelSize4 * cos(angleTheta4);	//cos(angle)
 		ptSample4.x = vertices[0].x + ptSinCos4.y;
 		ptSample4.y = vertices[0].y - ptSinCos4.x;
-        circle(result, ptSample4, 3, Scalar(0,255,255), -1);	//Yellow for sample4 point
+//        circle(result, ptSample4, 3, Scalar(0,255,255), -1);	//Yellow for sample4 point
 
 //        //Debug info
 //        if(showSteps) {
@@ -272,7 +273,8 @@ vector<Plate> DetectRegions::segment(Mat input){
                 seed.x = ptSample4.x + rand()%(int)minSize - (minSize/2);
                 seed.y = ptSample4.y + rand()%(int)minSize - (minSize/2);
             }
-            circle(result, seed, 1, Scalar(0,255,255), -1);	//Draw seed point with Yellow
+            //TODO: Draw seed point
+//            circle(result, seed, 1, Scalar(0,255,255), -1);	//Draw seed point with Yellow
 
             int area = floodFill(input, mask, seed, Scalar(0,255,255), &ccomp,	//Yellow
             				Scalar(loDiff, loDiff, loDiff), Scalar(upDiff, upDiff, upDiff), flags);

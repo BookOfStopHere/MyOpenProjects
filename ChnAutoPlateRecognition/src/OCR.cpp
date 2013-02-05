@@ -10,9 +10,16 @@
 //for Spain
 //const char OCR::strCharacters[] = {'0','1','2','3','4','5','6','7','8','9','B', 'C', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'M', 'N', 'P', 'R', 'S', 'T', 'V', 'W', 'X', 'Y', 'Z'};
 //const int OCR::numCharacters=30;
+
 //for China
-const char OCR::strCharacters[] = {'0','1','2','3','4','5','6','7','8','9','B', 'C', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'M', 'N', 'P', 'R', 'S', 'T', 'V', 'W', 'X', 'Y', 'Z'};
-const int OCR::numCharacters=30;
+const char OCR::strChars[] = {
+		'0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+		'A', 'B', 'C', 'D', 'E', 'F', 'G',
+		'H', 'J', 'K', 'L', 'M', 'N',
+		'P', 'Q', 'R', 'S', 'T',
+		'U', 'V', 'W', 'X', 'Y', 'Z'
+	};
+const int OCR::numOfChars = sizeof(OCR::strChars) / sizeof(OCR::strChars[0]);
 
 CharSegment::CharSegment(){}
 CharSegment::CharSegment(Mat i, Rect p){
@@ -69,19 +76,20 @@ Mat OCR::preprocessChar(Mat in){
 // Verify the char size
 bool OCR::verifySizes(Mat r){
     //TODO: Char sizes of plate
-//    float aspect=45.0f/77.0f;	//for Spain
-	float aspect=45.0f/90.0f;	//for China
+	float nonZeroArea=0.98;	//China
+//    float aspect=45.0f/77.0f;	//Spain
+	float aspect=45.0f/90.0f;	//China
     float charAspect= (float)r.cols/(float)r.rows;
     //TODO: Char height range
-//    float minHeight=15;	//for Spain
-//    float maxHeight=28;	//for Spain
-    float minHeight=15;	//for China
-    float maxHeight=28;	//for China
+//    float minHeight=15;	//Spain
+//    float maxHeight=28;	//Spain
+    float minHeight=15;	//China
+    float maxHeight=35;	//China
     //We have a different aspect ratio for number 1, and it can be ~0.2
 //    float error=0.35;	//Spain
     float error=0.4;	//China
 //    float minAspect=0.2;	//Spain
-    float minAspect=0.14;
+    float minAspect=0.14;	//China
     float maxAspect=aspect+aspect*error;
     //area of pixels
     float area=countNonZero(r);
@@ -91,14 +99,18 @@ bool OCR::verifySizes(Mat r){
     float percPixels=area/bbArea;
 
     if(showSteps)
-        cout << "OCR Verify Char Size:" << " Char Aspect=" << charAspect << ", Char height=" << r.rows << ", Nonzero area percent=" << percPixels << ", "
-        	<< "Aspect=" << aspect << ", [" << minAspect << "," << maxAspect << "]" << "\n";
+        cout << "OCR Verify Char Size:" << "Actual Aspect=" << charAspect << ", Height=" << r.rows << ", NonZeroArea=" << percPixels << "\n"
+        	<< "Standard Aspect=" << aspect << "[" << minAspect << "," << maxAspect << "], NonZeroArea=" << nonZeroArea << "\n";
 
 
-    if(percPixels < 0.8 && charAspect > minAspect && charAspect < maxAspect && r.rows >= minHeight && r.rows < maxHeight)
+    if((percPixels < nonZeroArea) && (charAspect > minAspect) && (charAspect < maxAspect)
+    		&& (r.rows >= minHeight) && (r.rows <= maxHeight)) {
+//    	cout << "Verify Size passed\n";
         return true;
-    else
+    } else {
+//    	cout << "Verify Size NOT passed\n";
         return false;
+    }
 
 }
 
@@ -110,7 +122,8 @@ vector<CharSegment> OCR::segment(Plate plate){
     Mat img_threshold;
     //TODO: To get char image clearly
 //    threshold(input, img_threshold, 60, 255, CV_THRESH_BINARY_INV);	//Spain
-    threshold(input, img_threshold, 150, 255, CV_THRESH_BINARY);	//China
+//    threshold(input, img_threshold, 150, 255, CV_THRESH_BINARY);	//China
+    threshold(input, img_threshold, 160, 255, CV_THRESH_BINARY);	//China
     if(showSteps)
         imshow("OCR Segment Threshold", img_threshold);
 
@@ -138,18 +151,18 @@ vector<CharSegment> OCR::segment(Plate plate){
     while (itc!=contours.end()) {
         //Create bounding rect of object
         Rect mr = boundingRect(Mat(*itc));
-        rectangle(result, mr, Scalar(0,255,0));	//in Green
+        rectangle(result, mr, Scalar(0,255,0));	//Possible chars in Green
         //Crop image
         Mat auxRoi(img_threshold, mr);
         if(verifySizes(auxRoi)){
             auxRoi=preprocessChar(auxRoi);
             output.push_back(CharSegment(auxRoi, mr));
-            rectangle(result, mr, Scalar(0,125,255));
+            rectangle(result, mr, Scalar(0,125,255));	//Possible chars in Red
         }
         ++itc;
     }
 
-//    if(showSteps)
+    if(showSteps)
     {
         cout << "OCR number of chars: " << output.size() << "\n";
         imshow("OCR Chars", result);
@@ -318,13 +331,13 @@ void OCR::train(Mat TrainData, Mat classes, int nHiddenLayers){
     Mat layers(1,3,CV_32SC1);
     layers.at<int>(0)= TrainData.cols;
     layers.at<int>(1)= nHiddenLayers;
-    layers.at<int>(2)= numCharacters;
+    layers.at<int>(2)= numOfChars;
     ann.create(layers, CvANN_MLP::SIGMOID_SYM, 1, 1);
 
     //Prepare trainClases
     //Create a mat with n trained data by m classes
     Mat trainClasses;
-    trainClasses.create( TrainData.rows, numCharacters, CV_32FC1 );
+    trainClasses.create( TrainData.rows, numOfChars, CV_32FC1 );
     for( int i = 0; i <  trainClasses.rows; i++ )
     {
         for( int k = 0; k < trainClasses.cols; k++ )
@@ -347,7 +360,7 @@ void OCR::train(Mat TrainData, Mat classes, int nHiddenLayers){
 //Classify which char
 int OCR::classify(Mat feature){
     //int result=-1;
-    Mat output(1, numCharacters, CV_32FC1);
+    Mat output(1, numOfChars, CV_32FC1);
     ann.predict(feature, output);
 
     //We need know where in output is the max val, the x (cols) is the class.
@@ -390,7 +403,7 @@ string OCR::run(Plate *input){
             Mat f = features(ch, 15);
             //For each segment feature Classify
             int character = classify(f);
-            input->chars.push_back(strCharacters[character]);
+            input->chars.push_back(strChars[character]);
             input->charsPos.push_back(segments[i].pos);
         }
     }

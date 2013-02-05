@@ -37,8 +37,8 @@ class OCR{
         bool showSteps;
         bool saveSegments;
         string filename;
-        static const int numCharacters;
-        static const char strCharacters[];
+        static const int numOfChars;
+        static const char strChars[];
         OCR(string trainFile);
         OCR();
         string run(Plate *input);
