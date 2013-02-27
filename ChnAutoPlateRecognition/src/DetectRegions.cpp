@@ -75,21 +75,21 @@ vector<Plate> DetectRegions::segment(Mat input){
     //Finde vertical lines. Car plates have high density of vertical lines
     Mat img_sobel;
     Sobel(img_gray, img_sobel, CV_8U, 1, 0, 3, 1, 0, BORDER_DEFAULT);
-//    if(showSteps)
-//        imshow("Sobel", img_sobel);
+    if(showSteps)
+        imshow("Sobel", img_sobel);
 
     //threshold image
     Mat img_threshold;
     threshold(img_sobel, img_threshold, 0, 255, CV_THRESH_OTSU+CV_THRESH_BINARY);
-//    if(showSteps)
-//        imshow("Threshold", img_threshold);
+    if(showSteps)
+        imshow("Threshold", img_threshold);
 
     //Morphplogic operation close
 //    Mat element = getStructuringElement(MORPH_RECT, Size(17, 3) );
     Mat element = getStructuringElement(MORPH_RECT, Size(15, 3) );
     morphologyEx(img_threshold, img_threshold, CV_MOP_CLOSE, element);
-//    if(showSteps)
-//        imshow("Close", img_threshold);
+    if(showSteps)
+        imshow("Close", img_threshold);
 
     //Find contours of possibles plates
     vector< vector< Point> > contours;
@@ -286,7 +286,7 @@ vector<Plate> DetectRegions::segment(Mat input){
         }
 
 //        if(showSteps) {
-//            imshow("FloodFillMask", mask);
+////            imshow("FloodFillMask", mask);
 //        	imshow("FloodFill", input2);
 //            cvWaitKey(0);
 //        }
