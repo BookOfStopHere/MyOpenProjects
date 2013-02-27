@@ -8,6 +8,7 @@
 #define OCR_h
 
 #include <string.h>
+#include <string>
 #include <vector>
 
 #include "Plate.h"
@@ -38,7 +39,8 @@ class OCR{
         bool saveSegments;
         string filename;
         static const int numOfChars;
-        static const char strChars[];
+//        static const char strChars[];	//non HZ
+        static const string strChars[];	//HZ
         OCR(string trainFile);
         OCR();
         string run(Plate *input);

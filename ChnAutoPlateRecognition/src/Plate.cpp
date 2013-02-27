@@ -16,6 +16,7 @@ Plate::Plate(Mat img, Rect pos){
 
 string Plate::str(){
     string result="";
+
     //Order numbers
     vector<int> orderIndex;
     vector<int> xpositions;

@@ -8,6 +8,7 @@
 #define Plate_h
 
 #include <string.h>
+#include <string>
 #include <vector>
 
 #include <opencv/cv.h>
@@ -24,8 +25,9 @@ class Plate{
         string str();
         Rect position;
         Mat plateImg;
-        vector<char> chars;
-        vector<Rect> charsPos;        
+//        vector<char> chars;	//for char not contained HZ
+        vector<string> chars;	//for char contained HZ
+        vector<Rect> charsPos;
 };
 
 #endif
