@@ -4,13 +4,16 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
-../src/HelloOpenCV.cpp 
+../src/HelloOpenCV.cpp \
+../src/TestHZ.cpp 
 
 OBJS += \
-./src/HelloOpenCV.o 
+./src/HelloOpenCV.o \
+./src/TestHZ.o 
 
 CPP_DEPS += \
-./src/HelloOpenCV.d 
+./src/HelloOpenCV.d \
+./src/TestHZ.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes

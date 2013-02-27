@@ -11,7 +11,7 @@ using namespace std;
 
 #include <opencv/highgui.h>
 
-int main(int argc, char** argv) {
+int main1(int argc, char** argv) {
 	cout << "!!!Hello World!!!" << endl; // prints !!!Hello World!!!
 
     IplImage* pImg = cvLoadImage(argv[1]);
