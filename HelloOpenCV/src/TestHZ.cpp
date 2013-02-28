@@ -5,7 +5,7 @@ using namespace std;
 
 //#include <opencv/highgui.h>
 
-int main(int argc, char** argv) {
+int main2 (int argc, char** argv) {
 //	cout << "TestHZ \n"
 //			<< "HZ 京 sizeof()=" << sizeof("京") << "\n"
 //			<< "str A sizeof()=" << sizeof("A") << "\n"
