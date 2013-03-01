@@ -19,10 +19,10 @@ CvMemStorage* storage = 0;
 CvPoint pt[4];
 
 const char* wndname = "Square Detection Demo";
+
 // helper function:
 // finds a cosine of angle between vectors
 // from pt0->pt1 and from pt0->pt2
-
 double angle(CvPoint* pt1, CvPoint* pt2, CvPoint* pt0)
 {
 	double dx1 = pt1->x - pt0->x;
@@ -40,6 +40,7 @@ CvSeq* findSquares4(IplImage* img, CvMemStorage* storage)
 	CvSeq* contours;
 	int i, c, l, N = 11;
 	CvSize sz = cvSize(img->width & -2, img->height & -2);
+
 	IplImage* timg = cvCloneImage(img); // make a copy of input image
 	IplImage* gray = cvCreateImage(sz, 8, 1);
 	IplImage* pyr = cvCreateImage(cvSize(sz.width / 2, sz.height / 2), 8, 3);
@@ -55,13 +56,12 @@ CvSeq* findSquares4(IplImage* img, CvMemStorage* storage)
 	// with the width and height divisible by 2
 	cvSetImageROI(timg, cvRect(0, 0, sz.width, sz.height));
 
-	// down-scale and upscale the image to filter out the noise
+	// down-scale and up-scale the image to filter out the noise
 	cvPyrDown(timg, pyr, 7);
 	cvPyrUp(pyr, timg, 7);
 	tgray = cvCreateImage(sz, 8, 1);
 
 	// find squares in every color plane of the image
-
 	for (c = 0; c < 3; c++)
 	{
 		// extract the c-th color plane
@@ -87,13 +87,12 @@ CvSeq* findSquares4(IplImage* img, CvMemStorage* storage)
 			{
 				// apply threshold if l!=0:
 				//     tgray(x,y) = gray(x,y) < (l+1)*255/N ? 255 : 0
-				cvThreshold(tgray, gray, (l + 1) * 255 / N, 255,
-						CV_THRESH_BINARY);
+				cvThreshold(tgray, gray, (l + 1) * 255 / N, 255, CV_THRESH_BINARY);
 			}
 
 			// find contours and store them all as a list
 			cvFindContours(gray, storage, &contours, sizeof(CvContour),
-			CV_RETR_LIST, CV_CHAIN_APPROX_SIMPLE, cvPoint(0, 0));
+					CV_RETR_LIST, CV_CHAIN_APPROX_SIMPLE, cvPoint(0, 0));
 
 			// test each contour
 			while (contours)
@@ -101,7 +100,7 @@ CvSeq* findSquares4(IplImage* img, CvMemStorage* storage)
 				// approximate contour with accuracy proportional
 				// to the contour perimeter
 				result = cvApproxPoly(contours, sizeof(CvContour), storage,
-				CV_POLY_APPROX_DP, cvContourPerimeter(contours) * 0.02, 0);
+						CV_POLY_APPROX_DP, cvContourPerimeter(contours) * 0.02, 0);
 
 				// square contours should have 4 vertices after approximation
 				// relatively large area (to filter out noisy contours)
@@ -117,20 +116,19 @@ CvSeq* findSquares4(IplImage* img, CvMemStorage* storage)
 
 					for (i = 0; i < 5; i++)
 					{
-						// find minimum angle between joint
-						// edges (maximum of cosine)
+						// find minimum angle between joint edges (maximum of cosine)
 						if (i >= 2)
 						{
 							t = fabs(angle(
-							(CvPoint*) cvGetSeqElem(result, i),
-							(CvPoint*) cvGetSeqElem(result, i - 2),
-							(CvPoint*) cvGetSeqElem(result, i - 1)));
+									(CvPoint*) cvGetSeqElem(result, i),
+									(CvPoint*) cvGetSeqElem(result, i - 2),
+									(CvPoint*) cvGetSeqElem(result, i - 1)));
 							s = s > t ? s : t;
 						}
 					}
 
 					// if cosines of all angles are small
-					// (all angles are ~90 degree) then write quandrange
+					// (all angles are ~90 degree) then write quad range
 					// vertices to resultant sequence
 					if (s < 0.3)
 						for (i = 0; i < 4; i++)
