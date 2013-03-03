@@ -30,6 +30,7 @@ class DetectRegions{
         vector<Plate> run(Mat input);
     private:
         vector<Plate> segment(Mat input);
+        vector<RotatedRect> detectRectInVertline(Mat imgInput);
         bool verifySizes(RotatedRect mr);
         Mat histeq(Mat in);
 };

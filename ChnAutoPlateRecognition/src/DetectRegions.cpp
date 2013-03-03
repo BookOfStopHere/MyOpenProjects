@@ -63,33 +63,32 @@ Mat DetectRegions::histeq(Mat in)
 
 }
 
-// Segment all possible area of auto plates
-vector<Plate> DetectRegions::segment(Mat input){
-    vector<Plate> output;
-
+// Detect rectangle with vertical lines
+vector<RotatedRect> DetectRegions::detectRectInVertline(Mat imgInput)
+{
     //convert image to gray
     Mat img_gray;
-    cvtColor(input, img_gray, CV_BGR2GRAY);
-    blur(img_gray, img_gray, Size(5,5));    
+    cvtColor(imgInput, img_gray, CV_BGR2GRAY);
+    blur(img_gray, img_gray, Size(5,5));
 
-    //Finde vertical lines. Car plates have high density of vertical lines
+    //Find vertical lines. Car plates have high density of vertical lines
     Mat img_sobel;
     Sobel(img_gray, img_sobel, CV_8U, 1, 0, 3, 1, 0, BORDER_DEFAULT);
-    if(showSteps)
-        imshow("Sobel", img_sobel);
+//    if(showSteps)
+//        imshow("Sobel", img_sobel);
 
     //threshold image
     Mat img_threshold;
     threshold(img_sobel, img_threshold, 0, 255, CV_THRESH_OTSU+CV_THRESH_BINARY);
-    if(showSteps)
-        imshow("Threshold", img_threshold);
+//    if(showSteps)
+//        imshow("Threshold", img_threshold);
 
     //Morphplogic operation close
 //    Mat element = getStructuringElement(MORPH_RECT, Size(17, 3) );
     Mat element = getStructuringElement(MORPH_RECT, Size(15, 3) );
     morphologyEx(img_threshold, img_threshold, CV_MOP_CLOSE, element);
-    if(showSteps)
-        imshow("Close", img_threshold);
+//    if(showSteps)
+//        imshow("Close", img_threshold);
 
     //Find contours of possibles plates
     vector< vector< Point> > contours;
@@ -98,11 +97,12 @@ vector<Plate> DetectRegions::segment(Mat input){
             CV_RETR_EXTERNAL, // retrieve the external contours
             CV_CHAIN_APPROX_NONE); // all pixels of each contours
 
-    //Start to iterate to each contour founded
-    vector<vector<Point> >::iterator itc= contours.begin();
-    vector<RotatedRect> rects;
+    //Start to iterate to each contour found
+    vector<vector<Point> >::iterator itc = contours.begin();
+    //Return value
+    vector<RotatedRect> vecRects;
 
-    //Remove patch that are no inside limits of aspect ratio and area.    
+    //Remove patch that are no inside limits of aspect ratio and area.
     while (itc != contours.end()) {
         //Create bounding rect of object
         RotatedRect mr = minAreaRect(Mat(*itc));
@@ -110,41 +110,113 @@ vector<Plate> DetectRegions::segment(Mat input){
             itc = contours.erase(itc);
         }else{
             ++itc;
-            rects.push_back(mr);
-
-//            //FillPoly
-//            Mat imgPoly = Mat::zeros(input.rows, input.cols, CV_8UC1);
-//            fillPoly(imgPoly, Mat(*itc), 255);
-//            imshow("Fill Poly", imgPoly);
-//            cvWaitKey(0);
-
-//            int inRect = pointPolygonTest(Mat(*itc), mr.center, true);
-//            cout << "Contours center point(" << mr.center.x << "," << mr.center.y << ") status=" << inRect << "\n";
+            vecRects.push_back(mr);
         }
     }
 
     //Draw blue contours on a white image
-    cv::Mat result;
-    input.copyTo(result);
-    cv::drawContours(result,contours,
+    cv::Mat imgResult;
+    imgInput.copyTo(imgResult);
+    cv::drawContours(imgResult, contours,
             -1, // draw all contours
             cv::Scalar(255,0,0), // in blue
             1); // with a thickness of 1
+
+	if(showSteps) {
+		imshow("Contours in vert line", imgResult);
+		cvWaitKey(0);
+	}
+
+    return vecRects;
+}
+
+// Segment all possible area of auto plates
+vector<Plate> DetectRegions::segment(Mat imgInput){
+    vector<Plate> output;
+
+//    //convert image to gray
+//    Mat img_gray;
+//    cvtColor(imgInput, img_gray, CV_BGR2GRAY);
+//    blur(img_gray, img_gray, Size(5,5));
+//
+//    //Find vertical lines. Car plates have high density of vertical lines
+//    Mat img_sobel;
+//    Sobel(img_gray, img_sobel, CV_8U, 1, 0, 3, 1, 0, BORDER_DEFAULT);
+//    if(showSteps)
+//        imshow("Sobel", img_sobel);
+//
+//    //threshold image
+//    Mat img_threshold;
+//    threshold(img_sobel, img_threshold, 0, 255, CV_THRESH_OTSU+CV_THRESH_BINARY);
+//    if(showSteps)
+//        imshow("Threshold", img_threshold);
+//
+//    //Morphplogic operation close
+////    Mat element = getStructuringElement(MORPH_RECT, Size(17, 3) );
+//    Mat element = getStructuringElement(MORPH_RECT, Size(15, 3) );
+//    morphologyEx(img_threshold, img_threshold, CV_MOP_CLOSE, element);
+//    if(showSteps)
+//        imshow("Close", img_threshold);
+//
+//    //Find contours of possibles plates
+//    vector< vector< Point> > contours;
+//    findContours(img_threshold,
+//            contours, // a vector of contours
+//            CV_RETR_EXTERNAL, // retrieve the external contours
+//            CV_CHAIN_APPROX_NONE); // all pixels of each contours
+//
+//    //Start to iterate to each contour found
+//    vector<vector<Point> >::iterator itc = contours.begin();
+//    vector<RotatedRect> vecRects;
+//
+//    //Remove patch that are no inside limits of aspect ratio and area.
+//    while (itc != contours.end()) {
+//        //Create bounding rect of object
+//        RotatedRect mr = minAreaRect(Mat(*itc));
+//        if( !verifySizes(mr)){
+//            itc = contours.erase(itc);
+//        }else{
+//            ++itc;
+//            vecRects.push_back(mr);
+//
+////            //FillPoly
+////            Mat imgPoly = Mat::zeros(input.rows, input.cols, CV_8UC1);
+////            fillPoly(imgPoly, Mat(*itc), 255);
+////            imshow("Fill Poly", imgPoly);
+////            cvWaitKey(0);
+//
+////            int inRect = pointPolygonTest(Mat(*itc), mr.center, true);
+////            cout << "Contours center point(" << mr.center.x << "," << mr.center.y << ") status=" << inRect << "\n";
+//        }
+//    }
+//
+//    //Draw blue contours on a white image
+//    cv::Mat imgResult;
+//    imgInput.copyTo(imgResult);
+//    cv::drawContours(imgResult,contours,
+//            -1, // draw all contours
+//            cv::Scalar(255,0,0), // in blue
+//            1); // with a thickness of 1
 
 //    if(showSteps) {
 //    	imshow("Result with Contours", result);
 //    	cvWaitKey(0);
 //    }
 
-    for(int i=0; i< rects.size(); i++){
+	cv::Mat imgResult;
+	imgInput.copyTo(imgResult);
+
+    vector<RotatedRect> vecRects;
+    vecRects = DetectRegions::detectRectInVertline(imgInput);
+
+    for(int i=0; i< vecRects.size(); i++){
         //Draw green minAreaRect with Green
 		Point2f vertices[4];
-		rects[i].points(vertices);
+		vecRects[i].points(vertices);
 
 //		//TODO: Show the index of rects
 //		for (int n = 0; n < 4; n++)
 //			line(result, vertices[n], vertices[(n+1)%4], Scalar(0,255,0));	//Green
-
 //		char str1[5];
 //		sprintf(str1, "%d", i);
 //		putText(result, str1, vertices[0], CV_FONT_HERSHEY_SIMPLEX, 1, Scalar(0,255,0), 2);
@@ -152,49 +224,49 @@ vector<Plate> DetectRegions::segment(Mat input){
     	//For better rect cropping for each possible box
         //Make floodfill algorithm because the plate has white background
         //And then we can retrieve the contour box more clearly
-        circle(result, rects[i].center, 3, Scalar(0,255,0), -1);	//Green for center point
+        circle(imgResult, vecRects[i].center, 3, Scalar(0,255,0), -1);	//Green for center point
 
         //get the min and max size between width and height
-        float minSize=(rects[i].size.width < rects[i].size.height)? rects[i].size.width: rects[i].size.height;
+        float minSize=(vecRects[i].size.width < vecRects[i].size.height)? vecRects[i].size.width: vecRects[i].size.height;
         minSize = minSize - minSize*0.5;
 
         //Radius and Angle, radian=angle*Pi/180, angle=radian*180/Pi
         float bevelSize1, bevelSize2, bevelSize3, bevelSize4;
         float angleAlpha, angleBeta1, angleTheta1, angleBeta2, angleTheta2, angleBeta3, angleTheta3, angleBeta4, angleTheta4;
-        angleAlpha = abs(rects[i].angle * 3.1415 / 180);	//in Radian
-        if((rects[i].size.width > rects[i].size.height)) {
+        angleAlpha = abs(vecRects[i].angle * 3.1415 / 180);	//in Radian
+        if((vecRects[i].size.width > vecRects[i].size.height)) {
         	// 1/8
-            bevelSize1 = sqrt(rects[i].size.width * rects[i].size.width * 1/64 + rects[i].size.height * rects[i].size.height /4);
-            angleBeta1 = abs(atan2((rects[i].size.height /2), (rects[i].size.width * 1/8)));
+            bevelSize1 = sqrt(vecRects[i].size.width * vecRects[i].size.width * 1/64 + vecRects[i].size.height * vecRects[i].size.height /4);
+            angleBeta1 = abs(atan2((vecRects[i].size.height /2), (vecRects[i].size.width * 1/8)));
             angleTheta1 = angleAlpha + angleBeta1;
             // 3/4
-            bevelSize2 = sqrt(rects[i].size.width * rects[i].size.width * 9/16 + rects[i].size.height * rects[i].size.height /4);
-            angleBeta2 = abs(atan2((rects[i].size.height /2), (rects[i].size.width * 3/4)));
+            bevelSize2 = sqrt(vecRects[i].size.width * vecRects[i].size.width * 9/16 + vecRects[i].size.height * vecRects[i].size.height /4);
+            angleBeta2 = abs(atan2((vecRects[i].size.height /2), (vecRects[i].size.width * 3/4)));
             angleTheta2 = angleAlpha + angleBeta2;
         	// 3/8
-            bevelSize3 = sqrt(rects[i].size.width * rects[i].size.width * 9/64 + rects[i].size.height * rects[i].size.height /4);
-            angleBeta3 = abs(atan2((rects[i].size.height /2), (rects[i].size.width * 3/8)));
+            bevelSize3 = sqrt(vecRects[i].size.width * vecRects[i].size.width * 9/64 + vecRects[i].size.height * vecRects[i].size.height /4);
+            angleBeta3 = abs(atan2((vecRects[i].size.height /2), (vecRects[i].size.width * 3/8)));
             angleTheta3 = angleAlpha + angleBeta3;
             // 7/8
-            bevelSize4 = sqrt(rects[i].size.width * rects[i].size.width * 49/64 + rects[i].size.height * rects[i].size.height /4);
-            angleBeta4 = abs(atan2((rects[i].size.height /2), (rects[i].size.width * 7/8)));
+            bevelSize4 = sqrt(vecRects[i].size.width * vecRects[i].size.width * 49/64 + vecRects[i].size.height * vecRects[i].size.height /4);
+            angleBeta4 = abs(atan2((vecRects[i].size.height /2), (vecRects[i].size.width * 7/8)));
             angleTheta4 = angleAlpha + angleBeta4;
         } else {
         	// 1/8
-            bevelSize1 = sqrt(rects[i].size.width * rects[i].size.width /4 + rects[i].size.height * rects[i].size.height * 1/64);
-            angleBeta1 = abs(atan2((rects[i].size.height * 1/8), (rects[i].size.width /2)));
+            bevelSize1 = sqrt(vecRects[i].size.width * vecRects[i].size.width /4 + vecRects[i].size.height * vecRects[i].size.height * 1/64);
+            angleBeta1 = abs(atan2((vecRects[i].size.height * 1/8), (vecRects[i].size.width /2)));
             angleTheta1 = angleAlpha + angleBeta1;
             // 3/4
-            bevelSize2 = sqrt(rects[i].size.width * rects[i].size.width /4 + rects[i].size.height * rects[i].size.height * 9/16);
-            angleBeta2 = abs(atan2((rects[i].size.height * 3/4), (rects[i].size.width /2)));
+            bevelSize2 = sqrt(vecRects[i].size.width * vecRects[i].size.width /4 + vecRects[i].size.height * vecRects[i].size.height * 9/16);
+            angleBeta2 = abs(atan2((vecRects[i].size.height * 3/4), (vecRects[i].size.width /2)));
             angleTheta2 = angleAlpha + angleBeta2;
         	// 3/8
-            bevelSize3 = sqrt(rects[i].size.width * rects[i].size.width /4 + rects[i].size.height * rects[i].size.height * 9/64);
-            angleBeta3 = abs(atan2((rects[i].size.height * 3/8), (rects[i].size.width /2)));
+            bevelSize3 = sqrt(vecRects[i].size.width * vecRects[i].size.width /4 + vecRects[i].size.height * vecRects[i].size.height * 9/64);
+            angleBeta3 = abs(atan2((vecRects[i].size.height * 3/8), (vecRects[i].size.width /2)));
             angleTheta3 = angleAlpha + angleBeta3;
         	// 7/8
-            bevelSize4 = sqrt(rects[i].size.width * rects[i].size.width /4 + rects[i].size.height * rects[i].size.height * 49/64);
-            angleBeta4 = abs(atan2((rects[i].size.height * 7/8), (rects[i].size.width /2)));
+            bevelSize4 = sqrt(vecRects[i].size.width * vecRects[i].size.width /4 + vecRects[i].size.height * vecRects[i].size.height * 49/64);
+            angleBeta4 = abs(atan2((vecRects[i].size.height * 7/8), (vecRects[i].size.width /2)));
             angleTheta4 = angleAlpha + angleBeta4;
         }
 
@@ -241,7 +313,7 @@ vector<Plate> DetectRegions::segment(Mat input){
         srand ( time(NULL) );
         //Initialize floodfill parameters and variables
         Mat mask;
-        mask.create(input.rows + 2, input.cols + 2, CV_8UC1);
+        mask.create(imgInput.rows + 2, imgInput.cols + 2, CV_8UC1);
         mask = Scalar::all(0);
         int loDiff = 30;
         int upDiff = 30;
@@ -276,7 +348,7 @@ vector<Plate> DetectRegions::segment(Mat input){
             //TODO: Draw seed point
 //            circle(result, seed, 1, Scalar(0,255,255), -1);	//Draw seed point with Yellow
 
-            int area = floodFill(input, mask, seed, Scalar(0,255,255), &ccomp,	//Yellow
+            int area = floodFill(imgInput, mask, seed, Scalar(0,255,255), &ccomp,	//Yellow
             				Scalar(loDiff, loDiff, loDiff), Scalar(upDiff, upDiff, upDiff), flags);
 
 //            //TODO: Show the result of floodfilling
@@ -318,7 +390,7 @@ vector<Plate> DetectRegions::segment(Mat input){
 
             //Draw the RotatedRect with Red
             for( int j = 0; j < 4; j++ ) {
-                line( result, rect_points[j], rect_points[(j+1)%4], Scalar(0,0,255), 1, 8 );    
+                line( imgResult, rect_points[j], rect_points[(j+1)%4], Scalar(0,0,255), 1, 8 );    
 //				cout << "\tvertex[" << j << "] x=" << rect_points[j].x << ", y=" << rect_points[j].y << "\n";
             }
 
@@ -331,7 +403,7 @@ vector<Plate> DetectRegions::segment(Mat input){
 
             //Create and rotate image
             Mat img_rotated;
-            warpAffine(input, img_rotated, rotmat, input.size(), CV_INTER_CUBIC);
+            warpAffine(imgInput, img_rotated, rotmat, imgInput.size(), CV_INTER_CUBIC);
 
             //Crop image
             Size rect_size = minRect.size;
@@ -364,7 +436,7 @@ vector<Plate> DetectRegions::segment(Mat input){
     }       
 
     if(showSteps) 
-        imshow("Contours", result);
+        imshow("Contours", imgResult);
 
     return output;
 }
