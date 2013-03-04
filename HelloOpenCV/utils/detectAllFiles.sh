@@ -1,5 +1,5 @@
 #!/bin/bash
-FILES=../../AutoPlates/*.jpg
+FILES=../../AutoPlates/jing*.jpg
 #FILES1=./images/*.JPG
 
 for f in $FILES

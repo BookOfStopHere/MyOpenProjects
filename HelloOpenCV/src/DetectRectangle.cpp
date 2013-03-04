@@ -35,16 +35,16 @@ double angle(CvPoint* pt1, CvPoint* pt2, CvPoint* pt0)
 
 // returns sequence of squares detected on the image.
 // the sequence is stored in the specified memory storage
-CvSeq* findSquares4(IplImage* img, CvMemStorage* storage)
+CvSeq* findSquares4(IplImage* imgSrc, CvMemStorage* storage)
 {
 	CvSeq* contours;
 	int i, c, l, N = 11;
-	CvSize sz = cvSize(img->width & -2, img->height & -2);
+	CvSize sz = cvSize(imgSrc->width & -2, imgSrc->height & -2);
 
-	IplImage* timg = cvCloneImage(img); // make a copy of input image
-	IplImage* gray = cvCreateImage(sz, 8, 1);
-	IplImage* pyr = cvCreateImage(cvSize(sz.width / 2, sz.height / 2), 8, 3);
-	IplImage* tgray;
+	IplImage* imgTmp = cvCloneImage(imgSrc); // make a copy of input image
+	IplImage* imgGray = cvCreateImage(sz, 8, 1);
+	IplImage* imgPyr = cvCreateImage(cvSize(sz.width / 2, sz.height / 2), 8, 3);
+	IplImage* imgGrayTmp;
 	CvSeq* result;
 	double s, t;
 
@@ -54,19 +54,19 @@ CvSeq* findSquares4(IplImage* img, CvMemStorage* storage)
 
 	// select the maximum ROI in the image
 	// with the width and height divisible by 2
-	cvSetImageROI(timg, cvRect(0, 0, sz.width, sz.height));
+	cvSetImageROI(imgTmp, cvRect(0, 0, sz.width, sz.height));
 
 	// down-scale and up-scale the image to filter out the noise
-	cvPyrDown(timg, pyr, 7);
-	cvPyrUp(pyr, timg, 7);
-	tgray = cvCreateImage(sz, 8, 1);
+	cvPyrDown(imgTmp, imgPyr, 7);
+	cvPyrUp(imgPyr, imgTmp, 7);
+	imgGrayTmp = cvCreateImage(sz, 8, 1);
 
 	// find squares in every color plane of the image
 	for (c = 0; c < 3; c++)
 	{
 		// extract the c-th color plane
-		cvSetImageCOI(timg, c + 1);
-		cvCopy(timg, tgray, 0);
+		cvSetImageCOI(imgTmp, c + 1);
+		cvCopy(imgTmp, imgGrayTmp, 0);
 
 		// try several threshold levels
 		for (l = 0; l < N; l++)
@@ -77,21 +77,21 @@ CvSeq* findSquares4(IplImage* img, CvMemStorage* storage)
 			{
 				// apply Canny. Take the upper threshold from slider
 				// and set the lower to 0 (which forces edges merging)
-				cvCanny(tgray, gray, 0, thresh, 5);
+				cvCanny(imgGrayTmp, imgGray, 0, thresh, 5);
 
 				// dilate canny output to remove potential
 				// holes between edge segments
-				cvDilate(gray, gray, 0, 1);
+				cvDilate(imgGray, imgGray, 0, 1);
 			}
 			else
 			{
 				// apply threshold if l!=0:
 				//     tgray(x,y) = gray(x,y) < (l+1)*255/N ? 255 : 0
-				cvThreshold(tgray, gray, (l + 1) * 255 / N, 255, CV_THRESH_BINARY);
+				cvThreshold(imgGrayTmp, imgGray, (l + 1) * 255 / N, 255, CV_THRESH_BINARY);
 			}
 
 			// find contours and store them all as a list
-			cvFindContours(gray, storage, &contours, sizeof(CvContour),
+			cvFindContours(imgGray, storage, &contours, sizeof(CvContour),
 					CV_RETR_LIST, CV_CHAIN_APPROX_SIMPLE, cvPoint(0, 0));
 
 			// test each contour
@@ -142,55 +142,74 @@ CvSeq* findSquares4(IplImage* img, CvMemStorage* storage)
 	}
 
 	// release all the temporary images
-	cvReleaseImage(&gray);
-	cvReleaseImage(&pyr);
-	cvReleaseImage(&tgray);
-	cvReleaseImage(&timg);
+	cvReleaseImage(&imgGray);
+	cvReleaseImage(&imgPyr);
+	cvReleaseImage(&imgGrayTmp);
+	cvReleaseImage(&imgTmp);
 
 	return squares;
 }
 
 // the function draws all the squares in the image
-void drawSquares(IplImage* img, CvSeq* squares)
+void drawSquares(IplImage* imgSrc, CvSeq* squares)
 {
 	CvSeqReader reader;
-	IplImage* cpy = cvCloneImage(img);
+	IplImage* imgCopy = cvCloneImage(imgSrc);
 	int i;
 
 	// initialize reader of the sequence
 	cvStartReadSeq(squares, &reader, 0);
 
 	// read 4 sequence elements at a time (all vertices of a square)
+	printf("Found %d rectangles in image\n", squares->total / 4);
+
 	for (i = 0; i < squares->total; i += 4)
 	{
-		CvPoint* rect = pt;
-		int count = 4;
+		CvPoint* pntRect = pt;
+		int pntCount = 4;
+		CvSeq* seqRect = cvCreateSeq(CV_32SC2, sizeof(CvSeq), sizeof(CvPoint), storage);
 
 		// read 4 vertices
 		memcpy(pt, reader.ptr, squares->elem_size);
 		CV_NEXT_SEQ_ELEM(squares->elem_size, reader);
+		cvSeqPush(seqRect, &pntRect[0]);
+
 		memcpy(pt + 1, reader.ptr, squares->elem_size);
 		CV_NEXT_SEQ_ELEM(squares->elem_size, reader);
+		cvSeqPush(seqRect, &pntRect[1]);
+
 		memcpy(pt + 2, reader.ptr, squares->elem_size);
 		CV_NEXT_SEQ_ELEM(squares->elem_size, reader);
+		cvSeqPush(seqRect, &pntRect[2]);
+
 		memcpy(pt + 3, reader.ptr, squares->elem_size);
 		CV_NEXT_SEQ_ELEM(squares->elem_size, reader);
+		cvSeqPush(seqRect, &pntRect[3]);
 
 		// draw the square as a closed polyline
-		cvPolyLine(cpy, &rect, &count, 1, 1, CV_RGB(0, 255, 0), 1, CV_AA, 0);
+		cvPolyLine(imgCopy, &pntRect, &pntCount, 1, 1, CV_RGB(0, 255, 0), 1, CV_AA, 0);
+
+		// draw the min outter rect
+		CvBox2D box = cvMinAreaRect2(seqRect, NULL);
+	    CvPoint2D32f ptBox[4];
+	    cvBoxPoints(box, ptBox);
+	    for(int i = 0; i < 4; ++i) {
+	        cvLine(imgCopy, cvPointFrom32f(ptBox[i]), cvPointFrom32f(ptBox[((i+1)%4)?(i+1):0]), CV_RGB(255,0,0));
+	    }
+
 	}
 
 	// show the resultant image
-	cvShowImage(wndname, cpy);
-	cvReleaseImage(&cpy);
+	cvShowImage(wndname, imgCopy);
+	cvReleaseImage(&imgCopy);
 }
 
-//Action after user changes the value of track bar
-void on_trackbar(int a)
-{
-	if (img)
-		drawSquares(img, findSquares4(img, storage));
-}
+////Action after user changes the value of track bar
+//void on_trackbar(int a)
+//{
+//	if (img)
+//		drawSquares(img, findSquares4(img, storage));
+//}
 
 //char* names[] = {
 //		"../../AutoPlates/chuanA33333.jpg",
@@ -223,10 +242,15 @@ int main(int argc, char** argv)
 	// create window and a trackbar (slider) with parent "image" and set callback
 	// (the slider regulates upper threshold, passed to Canny edge detector)
 	cvNamedWindow(wndname, 1);
-	cvCreateTrackbar("canny thresh", wndname, &thresh, 1000, on_trackbar);
+	if (img) {
+		CvSeq* squares = findSquares4(img, storage);
+		drawSquares(img, squares);
+	}
 
-	// force the image processing
-	on_trackbar(0);
+//	cvCreateTrackbar("canny thresh", wndname, &thresh, 1000, on_trackbar);
+//
+//	// force the image processing
+//	on_trackbar(0);
 
 	// release both images
 	cvReleaseImage(&img);
