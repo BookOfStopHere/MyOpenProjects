@@ -15,7 +15,6 @@ DetectRegions::DetectRegions(){
 
 // To verify the size of auto plates
 bool DetectRegions::verifySizes(RotatedRect mr){
-
     float error = 0.4;
 
     //TODO: Car plate aspect
@@ -30,7 +29,7 @@ bool DetectRegions::verifySizes(RotatedRect mr){
     float rmin= aspect-aspect*error;
     float rmax= aspect+aspect*error;
 
-    int area= mr.size.height * mr.size.width;
+    int area = mr.size.height * mr.size.width;
     float r= (float)mr.size.width / (float)mr.size.height;
     if(r<1)
         r= (float)mr.size.height / (float)mr.size.width;
@@ -44,7 +43,7 @@ bool DetectRegions::verifySizes(RotatedRect mr){
 }
 
 // Equalize the Mat
-Mat DetectRegions::histeq(Mat in)
+Mat DetectRegions::histEqulize(Mat in)
 {
     Mat out(in.size(), in.type());
     if(in.channels()==3){
@@ -130,86 +129,55 @@ vector<RotatedRect> DetectRegions::detectRectInVertline(Mat imgInput)
     return vecRects;
 }
 
+// Crop the possible plate and convert to gray image
+Mat DetectRegions::cropRectOfPlate(Mat imgInput, RotatedRect rectInput) {
+	Mat grayResult;
+
+    // To verify the size of plate
+    if(verifySizes(rectInput)){
+        //Rotate the matrix if width < height
+        float r = (float)rectInput.size.width / (float)rectInput.size.height;
+        float angle = rectInput.angle;
+        if(r < 1)
+            angle = 90 + angle;
+        Mat rotmat = getRotationMatrix2D(rectInput.center, angle, 1);
+
+        //Create and rotate image
+        Mat img_rotated;
+        warpAffine(imgInput, img_rotated, rotmat, imgInput.size(), CV_INTER_CUBIC);
+
+        //Crop image
+        Size rect_size = rectInput.size;
+        if(r < 1)
+            swap(rect_size.width, rect_size.height);
+        Mat img_crop;
+        getRectSubPix(img_rotated, rect_size, rectInput.center, img_crop);
+
+        Mat resultResized;
+        // TODO: create the image with the size of Chinese Auto Plate
+//            resultResized.create(33, 144, CV_8UC3);	//for Spain
+        resultResized.create(35, 110, CV_8UC3);	//for China
+        resize(img_crop, resultResized, resultResized.size(), 0, 0, INTER_CUBIC);
+
+        //Equalize croped image
+        cvtColor(resultResized, grayResult, CV_BGR2GRAY);
+        blur(grayResult, grayResult, Size(3,3));
+        grayResult = histEqulize(grayResult);
+    }
+
+    return grayResult;
+}
+
 // Segment all possible area of auto plates
-vector<Plate> DetectRegions::segment(Mat imgInput){
+vector<Plate> DetectRegions::segmentInVertLine(Mat imgInput){
     vector<Plate> output;
-
-//    //convert image to gray
-//    Mat img_gray;
-//    cvtColor(imgInput, img_gray, CV_BGR2GRAY);
-//    blur(img_gray, img_gray, Size(5,5));
-//
-//    //Find vertical lines. Car plates have high density of vertical lines
-//    Mat img_sobel;
-//    Sobel(img_gray, img_sobel, CV_8U, 1, 0, 3, 1, 0, BORDER_DEFAULT);
-//    if(showSteps)
-//        imshow("Sobel", img_sobel);
-//
-//    //threshold image
-//    Mat img_threshold;
-//    threshold(img_sobel, img_threshold, 0, 255, CV_THRESH_OTSU+CV_THRESH_BINARY);
-//    if(showSteps)
-//        imshow("Threshold", img_threshold);
-//
-//    //Morphplogic operation close
-////    Mat element = getStructuringElement(MORPH_RECT, Size(17, 3) );
-//    Mat element = getStructuringElement(MORPH_RECT, Size(15, 3) );
-//    morphologyEx(img_threshold, img_threshold, CV_MOP_CLOSE, element);
-//    if(showSteps)
-//        imshow("Close", img_threshold);
-//
-//    //Find contours of possibles plates
-//    vector< vector< Point> > contours;
-//    findContours(img_threshold,
-//            contours, // a vector of contours
-//            CV_RETR_EXTERNAL, // retrieve the external contours
-//            CV_CHAIN_APPROX_NONE); // all pixels of each contours
-//
-//    //Start to iterate to each contour found
-//    vector<vector<Point> >::iterator itc = contours.begin();
-//    vector<RotatedRect> vecRects;
-//
-//    //Remove patch that are no inside limits of aspect ratio and area.
-//    while (itc != contours.end()) {
-//        //Create bounding rect of object
-//        RotatedRect mr = minAreaRect(Mat(*itc));
-//        if( !verifySizes(mr)){
-//            itc = contours.erase(itc);
-//        }else{
-//            ++itc;
-//            vecRects.push_back(mr);
-//
-////            //FillPoly
-////            Mat imgPoly = Mat::zeros(input.rows, input.cols, CV_8UC1);
-////            fillPoly(imgPoly, Mat(*itc), 255);
-////            imshow("Fill Poly", imgPoly);
-////            cvWaitKey(0);
-//
-////            int inRect = pointPolygonTest(Mat(*itc), mr.center, true);
-////            cout << "Contours center point(" << mr.center.x << "," << mr.center.y << ") status=" << inRect << "\n";
-//        }
-//    }
-//
-//    //Draw blue contours on a white image
-//    cv::Mat imgResult;
-//    imgInput.copyTo(imgResult);
-//    cv::drawContours(imgResult,contours,
-//            -1, // draw all contours
-//            cv::Scalar(255,0,0), // in blue
-//            1); // with a thickness of 1
-
-//    if(showSteps) {
-//    	imshow("Result with Contours", result);
-//    	cvWaitKey(0);
-//    }
-
 	cv::Mat imgResult;
 	imgInput.copyTo(imgResult);
 
     vector<RotatedRect> vecRects;
     vecRects = DetectRegions::detectRectInVertline(imgInput);
 
-    for(int i=0; i< vecRects.size(); i++){
+    for(int i = 0; i < vecRects.size(); i++) {
         //Draw green minAreaRect with Green
 		Point2f vertices[4];
 		vecRects[i].points(vertices);
@@ -309,7 +277,8 @@ vector<Plate> DetectRegions::segment(Mat imgInput){
 //					<< "width=" << rects[i].size.width << ", height=" << rects[i].size.height << "\n";
 //        }
 
-        //initialize rand and get 10 points around center for floodfill algorithm
+        //Initialize rand and get n points around center
+		//for floodfill algorithm
         srand ( time(NULL) );
         //Initialize floodfill parameters and variables
         Mat mask;
@@ -322,9 +291,9 @@ vector<Plate> DetectRegions::segment(Mat imgInput){
         int newMaskVal = 255;	//255
         int flags = connectivity + (newMaskVal << 8 ) + CV_FLOODFILL_FIXED_RANGE + CV_FLOODFILL_MASK_ONLY;
 //        int flags = connectivity + CV_FLOODFILL_FIXED_RANGE + CV_FLOODFILL_MASK_ONLY;
-        int flags2 = connectivity + (newMaskVal << 8 ) + CV_FLOODFILL_FIXED_RANGE;
+//        int flags2 = connectivity + (newMaskVal << 8 ) + CV_FLOODFILL_FIXED_RANGE;
 //        int flags2 = connectivity + CV_FLOODFILL_FIXED_RANGE;
-        int nSeeds = 28;	//10
+        int nSeeds = 28;	//4*7 //10
         Rect ccomp;
         cv::Mat input2;
         for(int j = 0; j < nSeeds; j++) {
@@ -348,12 +317,12 @@ vector<Plate> DetectRegions::segment(Mat imgInput){
             //TODO: Draw seed point
 //            circle(result, seed, 1, Scalar(0,255,255), -1);	//Draw seed point with Yellow
 
-            int area = floodFill(imgInput, mask, seed, Scalar(0,255,255), &ccomp,	//Yellow
+            floodFill(imgInput, mask, seed, Scalar(0,255,255), &ccomp,	//YELLOW
             				Scalar(loDiff, loDiff, loDiff), Scalar(upDiff, upDiff, upDiff), flags);
 
 //            //TODO: Show the result of floodfilling
 //            input.copyTo(input2);
-//            int area2 = floodFill(input2, seed, Scalar(0,255,255), &ccomp,
+//            floodFill(input2, seed, Scalar(0,255,255), &ccomp,
 //            				Scalar(loDiff, loDiff, loDiff), Scalar(upDiff, upDiff, upDiff), flags2);
         }
 
@@ -373,81 +342,53 @@ vector<Plate> DetectRegions::segment(Mat imgInput){
             if(*itMask==255)
                 pointsInterest.push_back(itMask.pos());
 
-        RotatedRect minRect = minAreaRect(pointsInterest);
-
-        if(verifySizes(minRect)){
-            //Drawing the rotated rectangle
-            Point2f rect_points[4];
-            minRect.points( rect_points );
-
-//            //Show the parameters of RotatedRect
-//            if(showSteps) {
-//				cout << "RED Rectangle region of possible plate: \n";
-//				cout << "\tcenter of x=" << minRect.center.x << ", y=" << minRect.center.y
-//						<< ", width=" << minRect.size.width << ", height=" << minRect.size.height
-//						<< ", angle=" << minRect.angle << "\n";
-//            }
-
-            //Draw the RotatedRect with Red
-            for( int j = 0; j < 4; j++ ) {
-                line( imgResult, rect_points[j], rect_points[(j+1)%4], Scalar(0,0,255), 1, 8 );    
-//				cout << "\tvertex[" << j << "] x=" << rect_points[j].x << ", y=" << rect_points[j].y << "\n";
-            }
-
-            //Get rotation matrix ???
-            float r = (float)minRect.size.width / (float)minRect.size.height;
-            float angle = minRect.angle;
-            if(r < 1)
-                angle = 90 + angle;
-            Mat rotmat = getRotationMatrix2D(minRect.center, angle, 1);
-
-            //Create and rotate image
-            Mat img_rotated;
-            warpAffine(imgInput, img_rotated, rotmat, imgInput.size(), CV_INTER_CUBIC);
-
-            //Crop image
-            Size rect_size = minRect.size;
-            if(r < 1)
-                swap(rect_size.width, rect_size.height);
-            Mat img_crop;
-            getRectSubPix(img_rotated, rect_size, minRect.center, img_crop);
-            
-            Mat resultResized;
-            // TODO: create the image with the size of Chinese Auto Plate
-//            resultResized.create(33, 144, CV_8UC3);	//for Spain
-            resultResized.create(35, 110, CV_8UC3);	//for China
-
-            resize(img_crop, resultResized, resultResized.size(), 0, 0, INTER_CUBIC);
-            //Equalize croped image
-            Mat grayResult;
-            cvtColor(resultResized, grayResult, CV_BGR2GRAY); 
-            blur(grayResult, grayResult, Size(3,3));
-            grayResult = histeq(grayResult);
+        RotatedRect rectPlate = minAreaRect(pointsInterest);
+        if(verifySizes(rectPlate)) {
+            Mat imgGray = cropRectOfPlate(imgInput, rectPlate);
+        	output.push_back(Plate(imgGray, rectPlate.boundingRect()));
 
             // Save the blured gray image to file
-            if(saveRegions){ 
+            if(saveRegions){
                 stringstream ss(stringstream::in | stringstream::out);
-                ss << "../tmp/" << filename << "_" << i << ".jpg";
-                imwrite(ss.str(), grayResult);
+                ss << "../tmp/" << filename << "_v_" << i << ".jpg";
+                imwrite(ss.str(), imgGray);
             }
 
-            output.push_back(Plate(grayResult,minRect.boundingRect()));
+            //Drawing the rotated rectangle with RED
+			Point2f pntRectInput[4];
+			rectPlate.points( pntRectInput );
+			for( int j = 0; j < 4; j++ ) {
+				line( imgResult, pntRectInput[j], pntRectInput[(j+1)%4], Scalar(0,0,255), 1, 8 );
+			}
         }
     }       
 
     if(showSteps) 
-        imshow("Contours", imgResult);
+        imshow("VertLineContours", imgResult);
 
     return output;
 }
 
+//// Segment all possible area of auto plates
+//vector<Plate> DetectRegions::segmentInRectangle(Mat imgInput) {
+//    vector<Plate> output;
+//
+//
+//
+//    return output;
+//}
+
 vector<Plate> DetectRegions::run(Mat input){
     
     //Segment image by white 
-    vector<Plate> tmp = segment(input);
+    vector<Plate> rtn = segmentInVertLine(input);
+    vector<Plate> tmp = segmentInRectangle(input);
+
+    //Combile two vector
+    rtn.insert(rtn.end(), tmp.begin(), tmp.end());
 
     //return detected and posibles regions
-    return tmp;
+    return rtn;
 }
 
 

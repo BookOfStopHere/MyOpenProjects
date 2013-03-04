@@ -12,6 +12,7 @@
 #include <vector>
 
 #include "Plate.h"
+#include "DetectRectangle.h"
 
 #include <opencv/cv.h>
 #include <opencv/highgui.h>
@@ -29,10 +30,13 @@ class DetectRegions{
         bool showSteps;
         vector<Plate> run(Mat input);
     private:
-        vector<Plate> segment(Mat input);
+        vector<Plate> segmentInVertLine(Mat imgInput);
         vector<RotatedRect> detectRectInVertline(Mat imgInput);
+//        vector<Plate> segmentInRectangle(Mat imgInput);
+        Mat cropRectOfPlate(Mat imgInput, RotatedRect rectInput);
         bool verifySizes(RotatedRect mr);
-        Mat histeq(Mat in);
+        Mat histEqulize(Mat in);
 };
 
 #endif
+

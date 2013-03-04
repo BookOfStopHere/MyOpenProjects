@@ -5,12 +5,7 @@
  *      Author: jockeyyan
  */
 
-#include <opencv/cv.h>
-#include <opencv/highgui.h>
-
-#include <stdio.h>
-#include <math.h>
-#include <string.h>
+#include "DetectRectangle.h"
 
 int gThresh = 50;
 IplImage* gImg = 0;
@@ -18,7 +13,7 @@ IplImage* gImg0 = 0;
 CvMemStorage* gStorage = 0;
 CvPoint gPnt[4];
 
-const char* wndname = "Square Detection Demo";
+const char* wndname = "SquareContours";
 
 // helper function:
 // finds a cosine of angle between vectors
@@ -189,8 +184,11 @@ void drawSquares(IplImage* imgSrc, CvSeq* squares)
 		// draw the square as a closed polyline
 		cvPolyLine(imgCopy, &pntRect, &pntCount, 1, 1, CV_RGB(0, 255, 0), 1, CV_AA, 0);
 
-		// draw the min outter rect
+		// convert to rotatedRect
 		CvBox2D box = cvMinAreaRect2(seqRect, NULL);
+		RotatedRect rectRot = RotatedRect(box);
+
+		// draw the min outter rect
 	    CvPoint2D32f ptBox[4];
 	    cvBoxPoints(box, ptBox);
 	    for(int i = 0; i < 4; ++i) {
@@ -204,53 +202,27 @@ void drawSquares(IplImage* imgSrc, CvSeq* squares)
 	cvReleaseImage(&imgCopy);
 }
 
-////Action after user changes the value of track bar
-//void on_trackbar(int a)
-//{
-//	if (img)
-//		drawSquares(img, findSquares4(img, storage));
-//}
-
-//char* names[] = {
-//		"../../AutoPlates/chuanA33333.jpg",
-//		0 };
-
-int main5 (int argc, char** argv)
+//Segment plate in rectangle
+vector<Plate> segmentInRectangle (Mat imgMat)
 {
-	char* filename;
-	int c;
+    vector<Plate> output;
+    IplImage imgSrc = IplImage(imgMat);
 
 	// create memory storage that will contain all the dynamic data
 	gStorage = cvCreateMemStorage(0);
+	gImg = cvCloneImage(&imgSrc);
 
-    if(argc == 2 ) {
-        filename = argv[1];
-    } else {
-        printf("Usage:\t%s image_file\n", argv[0]);
-        printf("\timage_file: image that maybe contains rectangle\n\n");
-        return 0;
-    }
-
-	gImg0 = cvLoadImage(filename, 1);
-	if (!gImg0)
-	{
-		printf("Couldn't load %s\n", filename);
-		return 0;
-	}
-	gImg = cvCloneImage(gImg0);
-
-	// create window and a trackbar (slider) with parent "image" and set callback
-	// (the slider regulates upper threshold, passed to Canny edge detector)
 	cvNamedWindow(wndname, 1);
+
 	if (gImg) {
 		CvSeq* squares = findSquares4(gImg, gStorage);
-		drawSquares(gImg, squares);
-	}
 
-//	cvCreateTrackbar("canny thresh", wndname, &thresh, 1000, on_trackbar);
-//
-//	// force the image processing
-//	on_trackbar(0);
+		// for each rectangle, get rectangle pos, crop and convert to plate
+		drawSquares(gImg, squares);
+
+//        Mat imgGray = cropRectOfPlate(imgInput, rectPlate);
+//    	output.push_back(Plate(imgGray, rectPlate.boundingRect()));
+	}
 
 	// release both images
 	cvReleaseImage(&gImg);
@@ -263,7 +235,7 @@ int main5 (int argc, char** argv)
 	{
     	// wait for key.
     	// Also the function cvWaitKey takes care of event processing
-    	c = cvWaitKey(0);
+    	int c = cvWaitKey(0);
 
     	if (c == 27)
     		break;
@@ -271,5 +243,5 @@ int main5 (int argc, char** argv)
 
 	cvDestroyWindow(wndname);
 
-	return 0;
+    return output;
 }

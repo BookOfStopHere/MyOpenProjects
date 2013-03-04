@@ -8,21 +8,24 @@ CPP_SRCS += \
 ../src/DetectLine.cpp \
 ../src/DetectRectangle.cpp \
 ../src/HelloOpenCV.cpp \
-../src/TestHZ.cpp 
+../src/TestHZ.cpp \
+../src/calcBackProject_Demo2.cpp 
 
 OBJS += \
 ./src/DetectCircle.o \
 ./src/DetectLine.o \
 ./src/DetectRectangle.o \
 ./src/HelloOpenCV.o \
-./src/TestHZ.o 
+./src/TestHZ.o \
+./src/calcBackProject_Demo2.o 
 
 CPP_DEPS += \
 ./src/DetectCircle.d \
 ./src/DetectLine.d \
 ./src/DetectRectangle.d \
 ./src/HelloOpenCV.d \
-./src/TestHZ.d 
+./src/TestHZ.d \
+./src/calcBackProject_Demo2.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes
