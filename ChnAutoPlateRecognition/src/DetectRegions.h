@@ -25,17 +25,15 @@ class DetectRegions{
     public:
         DetectRegions();
         string filename;
-        void setFilename(string f);
         bool saveRegions;
         bool showSteps;
-        vector<Plate> run(Mat input);
-    private:
+        void setFilename(string f);
         vector<Plate> segmentInVertLine(Mat imgInput);
+    private:
         vector<RotatedRect> detectRectInVertline(Mat imgInput);
-//        vector<Plate> segmentInRectangle(Mat imgInput);
-        Mat cropRectOfPlate(Mat imgInput, RotatedRect rectInput);
         bool verifySizes(RotatedRect mr);
-        Mat histEqulize(Mat in);
+        Mat cropRectOfPlate(Mat imgInput, RotatedRect rectInput);
+        Mat histEqualize(Mat in);
 };
 
 #endif

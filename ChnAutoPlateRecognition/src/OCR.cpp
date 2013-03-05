@@ -129,6 +129,7 @@ bool OCR::verifySizes(Mat r){
 vector<CharSegment> OCR::segment(Plate plate){
     Mat input=plate.plateImg;
     vector<CharSegment> output;
+
     //Threshold input image
     Mat img_threshold;
     //TODO: To get char image clearly

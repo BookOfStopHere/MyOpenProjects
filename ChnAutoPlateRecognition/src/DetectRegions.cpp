@@ -4,13 +4,15 @@
 
 #include "DetectRegions.h"
 
-void DetectRegions::setFilename(string s) {
-        filename = s;
-}
-
+// Constructor
 DetectRegions::DetectRegions(){
     showSteps = false;
     saveRegions = false;
+}
+
+// Set working file name
+void DetectRegions::setFilename(string s) {
+        filename = s;
 }
 
 // To verify the size of auto plates
@@ -43,7 +45,7 @@ bool DetectRegions::verifySizes(RotatedRect mr){
 }
 
 // Equalize the Mat
-Mat DetectRegions::histEqulize(Mat in)
+Mat DetectRegions::histEqualize(Mat in)
 {
     Mat out(in.size(), in.type());
     if(in.channels()==3){
@@ -162,7 +164,7 @@ Mat DetectRegions::cropRectOfPlate(Mat imgInput, RotatedRect rectInput) {
         //Equalize croped image
         cvtColor(resultResized, grayResult, CV_BGR2GRAY);
         blur(grayResult, grayResult, Size(3,3));
-        grayResult = histEqulize(grayResult);
+        grayResult = histEqualize(grayResult);
     }
 
     return grayResult;
@@ -369,26 +371,18 @@ vector<Plate> DetectRegions::segmentInVertLine(Mat imgInput){
     return output;
 }
 
-//// Segment all possible area of auto plates
-//vector<Plate> DetectRegions::segmentInRectangle(Mat imgInput) {
-//    vector<Plate> output;
+//vector<Plate> DetectRegions::run(Mat input){
 //
+//    //Segment image by white
+//    vector<Plate> rtn = segmentInVertLine(input);
+////    DetectRectangle.setFilename(fileName);
+//    vector<Plate> tmp = segmentInRectangle(input);
 //
+//    //Combile two vector
+//    rtn.insert(rtn.end(), tmp.begin(), tmp.end());
 //
-//    return output;
+//    //return detected and posibles regions
+//    return rtn;
 //}
-
-vector<Plate> DetectRegions::run(Mat input){
-    
-    //Segment image by white 
-    vector<Plate> rtn = segmentInVertLine(input);
-    vector<Plate> tmp = segmentInRectangle(input);
-
-    //Combile two vector
-    rtn.insert(rtn.end(), tmp.begin(), tmp.end());
-
-    //return detected and posibles regions
-    return rtn;
-}
 
 
