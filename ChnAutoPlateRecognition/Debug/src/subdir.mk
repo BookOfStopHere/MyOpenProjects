@@ -4,6 +4,7 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
+../src/DetectRectangle.cpp \
 ../src/DetectRegions.cpp \
 ../src/OCR.cpp \
 ../src/Plate.cpp \
@@ -13,6 +14,7 @@ CPP_SRCS += \
 ../src/trainSVM.cpp 
 
 OBJS += \
+./src/DetectRectangle.o \
 ./src/DetectRegions.o \
 ./src/OCR.o \
 ./src/Plate.o \
@@ -22,6 +24,7 @@ OBJS += \
 ./src/trainSVM.o 
 
 CPP_DEPS += \
+./src/DetectRectangle.d \
 ./src/DetectRegions.d \
 ./src/OCR.d \
 ./src/Plate.d \

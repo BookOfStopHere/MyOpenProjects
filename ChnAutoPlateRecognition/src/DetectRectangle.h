@@ -1,18 +1,16 @@
 /*****************************************************************************
-*   Number Plate Recognition using SVM and Neural Networks
-******************************************************************************
 *
 *****************************************************************************/
 
-#ifndef DetectRegions_h
-#define DetectRegions_h
+#ifndef DetectRectangle_h
+#define DetectRectangle_h
 
 #include <stdio.h>
+#include <math.h>
 #include <string.h>
 #include <vector>
 
 #include "Plate.h"
-#include "DetectRectangle.h"
 
 #include <opencv/cv.h>
 #include <opencv/highgui.h>
@@ -21,20 +19,27 @@
 using namespace std;
 using namespace cv;
 
-class DetectRegions{
+class DetectRectangle {
     public:
-        DetectRegions();
+		DetectRectangle();
         string filename;
         bool saveRegions;
         bool showSteps;
         void setFilename(string f);
-        vector<Plate> segmentInVertLine(Mat imgInput);
+        vector<Plate> segmentInRectangle (Mat imgMat);
     private:
-        vector<RotatedRect> detectRectInVertline(Mat imgInput);
+        int gThresh;
+        IplImage* gImg;
+        IplImage* gImg0;
+        CvMemStorage* gStorage;
+        CvPoint gPnt[4];
+        const char* wndname;
+        double angle(CvPoint* pt1, CvPoint* pt2, CvPoint* pt0);
+        CvSeq* findSquares4(IplImage* imgSrc, CvMemStorage* storage);
+        //Copy from DetectRegions
         bool verifySizes(RotatedRect mr);
         Mat cropRectOfPlate(Mat imgInput, RotatedRect rectInput);
         Mat histEqualize(Mat in);
 };
 
 #endif
-

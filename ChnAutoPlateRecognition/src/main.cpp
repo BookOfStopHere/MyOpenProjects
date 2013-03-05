@@ -80,18 +80,27 @@ int main ( int argc, char** argv )
 
     string filename_whithoutExt=getFilename(filename);
     cout << "Working with file: "<< filename_whithoutExt << "\n";
-    //Detect posibles plate regions
+
+    //Detect possibles plate regions in method1
     DetectRegions detectRegions;    
     detectRegions.setFilename(filename_whithoutExt);
-
     // Set saveRegions to save the images to ../tmp
-    //detectRegions.saveRegions = false;
     detectRegions.saveRegions = bSegmentPlateOnly;
     // Set showSteps to show each step
     detectRegions.showSteps = bShowSteps;
-    //detectRegions.showSteps=true;
+    vector<Plate> possible_regions1 = detectRegions.segmentInVertLine(input_image);
 
-    vector<Plate> posible_regions= detectRegions.run( input_image );    
+    //Detect possibles plate regions in method2
+    DetectRectangle detectRectangle;
+    detectRectangle.setFilename(filename_whithoutExt);
+    // Set saveRegions to save the images to ../tmp
+    detectRectangle.saveRegions = bSegmentPlateOnly;
+    // Set showSteps to show each step
+    detectRectangle.showSteps = bShowSteps;
+    vector<Plate> possible_regions2 = detectRectangle.segmentInRectangle(input_image);
+
+    //Combile two vector of plates
+    possible_regions1.insert(possible_regions1.end(), possible_regions2.begin(), possible_regions2.end());
 
     //If only segment the mat then exit
     if(! bSegmentPlateOnly) {
@@ -120,15 +129,15 @@ int main ( int argc, char** argv )
 
 		//For each possible plate, classify if it's a plate or not with SVM
 		vector<Plate> plates;
-		for(int i=0; i< posible_regions.size(); i++)
+		for(int i=0; i< possible_regions1.size(); i++)
 		{
-			Mat img=posible_regions[i].plateImg;
+			Mat img=possible_regions1[i].plateImg;
 			Mat p= img.reshape(1, 1);
 			p.convertTo(p, CV_32FC1);
 
 			int response = (int)svmClassifier.predict( p );
 			if(response==1)
-				plates.push_back(posible_regions[i]);
+				plates.push_back(possible_regions1[i]);
 		}
 		cout << "Number of plates detected: " << plates.size() << "\n";
 
@@ -137,24 +146,23 @@ int main ( int argc, char** argv )
 		//Save each char image to ../tmpChar
 		ocr.saveSegments = bSegmentCharOnly;
 		//If show each steps
-//		ocr.showSteps = false;
 		ocr.showSteps = bShowSteps;
 		ocr.filename = filename_whithoutExt;
 		for(int i=0; i< plates.size(); i++){
 			Plate plate=plates[i];
 
-			string plateNumber=ocr.run(&plate);
+			string plateNumber = ocr.run(&plate, i);
 
 			if(! bSegmentCharOnly) {
-				string licensePlate=plate.str();
+				string licensePlate = plate.str();
 				cout << "================================================\n";
-				cout << "License plate number: "<< licensePlate << "\n";
+				cout << "License plate #"<< i+1 << " number: "<< licensePlate << "\n";
 				cout << "================================================\n";
 				//Show the result
 				rectangle(input_image, plate.position, Scalar(0,0,200));
 				putText(input_image, licensePlate, Point(plate.position.x, plate.position.y), CV_FONT_HERSHEY_SIMPLEX, 1, Scalar(0,0,200),2);
 				if(bShowSteps){
-					imshow("Plate Detected seg", plate.plateImg);
+					imshow("Detected Plate", plate.plateImg);
 					cvWaitKey(0);
 				}
 			}

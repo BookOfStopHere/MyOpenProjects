@@ -129,9 +129,10 @@ bool OCR::verifySizes(Mat r){
 vector<CharSegment> OCR::segment(Plate plate){
     Mat input=plate.plateImg;
     vector<CharSegment> output;
+
     //Threshold input image
     Mat img_threshold;
-    //TODO: To get char image clearly
+    //TODO: To make char image clearly
 //    threshold(input, img_threshold, 60, 255, CV_THRESH_BINARY_INV);	//Spain
 //    threshold(input, img_threshold, 150, 255, CV_THRESH_BINARY);	//China
     threshold(input, img_threshold, 160, 255, CV_THRESH_BINARY);	//China
@@ -151,9 +152,10 @@ vector<CharSegment> OCR::segment(Plate plate){
     cv::Mat result;
     img_threshold.copyTo(result);
     cvtColor(result, result, CV_GRAY2RGB);
-    cv::drawContours(result,contours,
+    cv::drawContours(result,
+    		contours,
             -1, // draw all contours
-            cv::Scalar(255,0,0), // in Blue
+            cv::Scalar(255,0,0), // in BLUE
             1); // with a thickness of 1
 
     //Start to iterate to each contour founded
@@ -162,13 +164,13 @@ vector<CharSegment> OCR::segment(Plate plate){
     while (itc!=contours.end()) {
         //Create bounding rect of object
         Rect mr = boundingRect(Mat(*itc));
-        rectangle(result, mr, Scalar(0,255,0));	//Possible chars in Green
+        rectangle(result, mr, Scalar(0,255,0));	//Possible chars in GREEN
         //Crop image
         Mat auxRoi(img_threshold, mr);
         if(verifySizes(auxRoi)){
             auxRoi=preprocessChar(auxRoi);
             output.push_back(CharSegment(auxRoi, mr));
-            rectangle(result, mr, Scalar(0,125,255));	//Possible chars in Red
+            rectangle(result, mr, Scalar(0,0,255));	//Possible chars in RED
         }
         ++itc;
     }
@@ -288,7 +290,7 @@ void OCR::drawVisualFeatures(Mat character, Mat hhist, Mat vhist, Mat lowData){
     line(img, Point(0,100), Point(121,100), Scalar(0,0,255));
     line(img, Point(20,0), Point(20,121), Scalar(0,0,255));
 
-    imshow("Visual Features", img);
+    imshow("OCR Visual Features", img);
     //cvWaitKey(0);
 }
 
@@ -328,12 +330,12 @@ Mat OCR::features(Mat in, int sizeData){
             j++;
         }
     }
-    if(showSteps) {
-    	cout << "\n==============Char Features================\n";
-        cout << out;
-        cout << "\n===========================================\n";
-        cvWaitKey(0);
-    }
+//    if(showSteps) {
+//    	cout << "\n==============Char Features================\n";
+//        cout << out;
+//        cout << "\n===========================================\n";
+//        cvWaitKey(0);
+//    }
     return out;
 }
 
@@ -396,7 +398,7 @@ void OCR::trainKnn(Mat trainSamples, Mat trainClasses, int k){
 }
 
 // OCR entry point
-string OCR::run(Plate *input){
+string OCR::run(Plate *input, int idx){
     //Segment chars of plate
     vector<CharSegment> segments = segment(*input);
 
@@ -406,7 +408,7 @@ string OCR::run(Plate *input){
         //Save the chars to jpg
         if(saveSegments){
             stringstream ss(stringstream::in | stringstream::out);
-            ss << "../tmpChars/" << filename << "_" << i << ".jpg";
+            ss << "../tmpChars/" << filename << "_" << idx << "_" << i << ".jpg";
             imwrite(ss.str(),ch);
         } else {
             //TODO: Extract features of 15*15 image

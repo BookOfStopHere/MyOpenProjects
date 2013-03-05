@@ -43,7 +43,7 @@ class OCR{
         static const string strChars[];	//HZ
         OCR(string trainFile);
         OCR();
-        string run(Plate *input);
+        string run(Plate *input, int idx);
         int charSize;
         Mat preprocessChar(Mat in);
         int classify(Mat f);

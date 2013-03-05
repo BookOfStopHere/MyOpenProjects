@@ -12,11 +12,11 @@
 #include <math.h>
 #include <string.h>
 
-int thresh = 50;
-IplImage* img = 0;
-IplImage* img0 = 0;
-CvMemStorage* storage = 0;
-CvPoint pt[4];
+int gThresh = 50;
+IplImage* gImg = 0;
+IplImage* gImg0 = 0;
+CvMemStorage* gStorage = 0;
+CvPoint gPnt[4];
 
 const char* wndname = "Square Detection Demo";
 
@@ -77,7 +77,7 @@ CvSeq* findSquares4(IplImage* imgSrc, CvMemStorage* storage)
 			{
 				// apply Canny. Take the upper threshold from slider
 				// and set the lower to 0 (which forces edges merging)
-				cvCanny(imgGrayTmp, imgGray, 0, thresh, 5);
+				cvCanny(imgGrayTmp, imgGray, 0, gThresh, 5);
 
 				// dilate canny output to remove potential
 				// holes between edge segments
@@ -165,24 +165,24 @@ void drawSquares(IplImage* imgSrc, CvSeq* squares)
 
 	for (i = 0; i < squares->total; i += 4)
 	{
-		CvPoint* pntRect = pt;
+		CvPoint* pntRect = gPnt;
 		int pntCount = 4;
-		CvSeq* seqRect = cvCreateSeq(CV_32SC2, sizeof(CvSeq), sizeof(CvPoint), storage);
+		CvSeq* seqRect = cvCreateSeq(CV_32SC2, sizeof(CvSeq), sizeof(CvPoint), gStorage);
 
 		// read 4 vertices
-		memcpy(pt, reader.ptr, squares->elem_size);
+		memcpy(gPnt, reader.ptr, squares->elem_size);
 		CV_NEXT_SEQ_ELEM(squares->elem_size, reader);
 		cvSeqPush(seqRect, &pntRect[0]);
 
-		memcpy(pt + 1, reader.ptr, squares->elem_size);
+		memcpy(gPnt + 1, reader.ptr, squares->elem_size);
 		CV_NEXT_SEQ_ELEM(squares->elem_size, reader);
 		cvSeqPush(seqRect, &pntRect[1]);
 
-		memcpy(pt + 2, reader.ptr, squares->elem_size);
+		memcpy(gPnt + 2, reader.ptr, squares->elem_size);
 		CV_NEXT_SEQ_ELEM(squares->elem_size, reader);
 		cvSeqPush(seqRect, &pntRect[2]);
 
-		memcpy(pt + 3, reader.ptr, squares->elem_size);
+		memcpy(gPnt + 3, reader.ptr, squares->elem_size);
 		CV_NEXT_SEQ_ELEM(squares->elem_size, reader);
 		cvSeqPush(seqRect, &pntRect[3]);
 
@@ -215,13 +215,13 @@ void drawSquares(IplImage* imgSrc, CvSeq* squares)
 //		"../../AutoPlates/chuanA33333.jpg",
 //		0 };
 
-int main(int argc, char** argv)
+int main5 (int argc, char** argv)
 {
 	char* filename;
 	int c;
 
 	// create memory storage that will contain all the dynamic data
-	storage = cvCreateMemStorage(0);
+	gStorage = cvCreateMemStorage(0);
 
     if(argc == 2 ) {
         filename = argv[1];
@@ -231,20 +231,20 @@ int main(int argc, char** argv)
         return 0;
     }
 
-	img0 = cvLoadImage(filename, 1);
-	if (!img0)
+	gImg0 = cvLoadImage(filename, 1);
+	if (!gImg0)
 	{
 		printf("Couldn't load %s\n", filename);
 		return 0;
 	}
-	img = cvCloneImage(img0);
+	gImg = cvCloneImage(gImg0);
 
 	// create window and a trackbar (slider) with parent "image" and set callback
 	// (the slider regulates upper threshold, passed to Canny edge detector)
 	cvNamedWindow(wndname, 1);
-	if (img) {
-		CvSeq* squares = findSquares4(img, storage);
-		drawSquares(img, squares);
+	if (gImg) {
+		CvSeq* squares = findSquares4(gImg, gStorage);
+		drawSquares(gImg, squares);
 	}
 
 //	cvCreateTrackbar("canny thresh", wndname, &thresh, 1000, on_trackbar);
@@ -253,11 +253,11 @@ int main(int argc, char** argv)
 //	on_trackbar(0);
 
 	// release both images
-	cvReleaseImage(&img);
-	cvReleaseImage(&img0);
+	cvReleaseImage(&gImg);
+	cvReleaseImage(&gImg0);
 
 	// clear memory storage - reset free space position
-	cvClearMemStorage(storage);
+	cvClearMemStorage(gStorage);
 
     for(;;)
 	{
