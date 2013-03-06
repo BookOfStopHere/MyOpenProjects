@@ -120,11 +120,13 @@ vector<RotatedRect> DetectRegions::detectRectInVertline(Mat imgInput)
     imgInput.copyTo(imgResult);
     cv::drawContours(imgResult, contours,
             -1, // draw all contours
-            cv::Scalar(255,0,0), // in blue
+            cv::Scalar(255,0,0), // in BLUE
             1); // with a thickness of 1
 
-	if(showSteps) {
-		imshow("Contours in vert line", imgResult);
+	if(debug) {
+		string wndName = "Contours_in_vert_line";
+		namedWindow(wndName, WINDOW_NORMAL);
+		imshow(wndName, imgResult);
 		cvWaitKey(0);
 	}
 
@@ -184,18 +186,17 @@ vector<Plate> DetectRegions::segmentInVertLine(Mat imgInput){
 		Point2f vertices[4];
 		vecRects[i].points(vertices);
 
-//		//TODO: Show the index of rects
-//		for (int n = 0; n < 4; n++)
-//			line(result, vertices[n], vertices[(n+1)%4], Scalar(0,255,0));	//Green
-//		char str1[5];
-//		sprintf(str1, "%d", i);
-//		putText(result, str1, vertices[0], CV_FONT_HERSHEY_SIMPLEX, 1, Scalar(0,255,0), 2);
+		//TODO: DEBUG Show the index of rects
+		if(debug) {
+			for (int n = 0; n < 4; n++)
+				line(imgResult, vertices[n], vertices[(n+1)%4], Scalar(0,255,0));	//GREEN
+			char str1[5];
+			sprintf(str1, "%d", i);
+			putText(imgResult, str1, vertices[0], CV_FONT_HERSHEY_SIMPLEX, 1, Scalar(0,255,0), 2);
+	        circle(imgResult, vecRects[i].center, 3, Scalar(0,255,0), -1);	//GREEN for center point
+		}
 
-    	//For better rect cropping for each possible box
-        //Make floodfill algorithm because the plate has white background
-        //And then we can retrieve the contour box more clearly
-        circle(imgResult, vecRects[i].center, 3, Scalar(0,255,0), -1);	//Green for center point
-
+    	//For better rect cropping for each possible box, make floodfill algorithm for it
         //get the min and max size between width and height
         float minSize=(vecRects[i].size.width < vecRects[i].size.height)? vecRects[i].size.width: vecRects[i].size.height;
         minSize = minSize - minSize*0.5;
@@ -245,59 +246,62 @@ vector<Plate> DetectRegions::segmentInVertLine(Mat imgInput){
         ptSinCos1.y = bevelSize1 * cos(angleTheta1);	//cos(angle)
 		ptSample1.x = vertices[0].x + ptSinCos1.y;
 		ptSample1.y = vertices[0].y - ptSinCos1.x;
-//        circle(result, ptSample1, 3, Scalar(0,255,255), -1);	//Yellow for sample1 point
 
         Point ptSample2, ptSinCos2;
         ptSinCos2.x = bevelSize2 * sin(angleTheta2);	//sin(angle)
         ptSinCos2.y = bevelSize2 * cos(angleTheta2);	//cos(angle)
 		ptSample2.x = vertices[0].x + ptSinCos2.y;
 		ptSample2.y = vertices[0].y - ptSinCos2.x;
-//        circle(result, ptSample2, 3, Scalar(0,255,255), -1);	//Yellow for sample2 point
 
         Point ptSample3, ptSinCos3;
         ptSinCos3.x = bevelSize3 * sin(angleTheta3);	//sin(angle)
         ptSinCos3.y = bevelSize3 * cos(angleTheta3);	//cos(angle)
 		ptSample3.x = vertices[0].x + ptSinCos3.y;
 		ptSample3.y = vertices[0].y - ptSinCos3.x;
-//        circle(result, ptSample3, 3, Scalar(0,255,255), -1);	//Yellow for sample3 point
 
         Point ptSample4, ptSinCos4;
         ptSinCos4.x = bevelSize4 * sin(angleTheta4);	//sin(angle)
         ptSinCos4.y = bevelSize4 * cos(angleTheta4);	//cos(angle)
 		ptSample4.x = vertices[0].x + ptSinCos4.y;
 		ptSample4.y = vertices[0].y - ptSinCos4.x;
-//        circle(result, ptSample4, 3, Scalar(0,255,255), -1);	//Yellow for sample4 point
 
-//        //Debug info
-//        if(showSteps) {
+        //TODO: DEBUG
+		if(debug) {
+			circle(imgResult, ptSample1, 3, Scalar(0,255,255), -1);	//YELLOW for sample1 point
+			circle(imgResult, ptSample2, 3, Scalar(0,255,255), -1);	//YELLOW for sample2 point
+			circle(imgResult, ptSample3, 3, Scalar(0,255,255), -1);	//YELLOW for sample3 point
+			circle(imgResult, ptSample4, 3, Scalar(0,255,255), -1);	//YELLOW for sample4 point
+			cout << "Sample point coordinate: ptSample1=" << ptSample1 << "," << "ptSample2=" << ptSample2 << ","
+					<< "ptSample3=" << ptSample3 << "," << "ptSample4=" << ptSample4 << "\n";
+
 //			cout << "GREEN Rectangle[" << i << "] region of possible plate: \n"
 //					<< "first point x=" << vertices[0].x << ", y=" << vertices[0].y << "\n"
 //					<< "sample1 point x=" << ptSample1.x << ", y=" << ptSample1.y << "\n"
 //					<< "bevelSize1=" << bevelSize1 << ", angleAlpha=" << angleAlpha * 180 / 3.1415 << ", angleBeta1=" << angleBeta1  * 180 / 3.1415 << ", angleTheta1=" << angleTheta1  * 180 / 3.1415 << "\n"
 //					<< "sin()=" << ptSinCos1.x << ", cos()=" << ptSinCos1.y << "\n"
 //					<< "sample2 point x=" << ptSample2.x << ", y=" << ptSample2.y << "\n"
-//					<< "width=" << rects[i].size.width << ", height=" << rects[i].size.height << "\n";
-//        }
+//					<< "width=" << vecRects[i].size.width << ", height=" << vecRects[i].size.height << "\n";
+		}
 
         //Initialize rand and get n points around center
 		//for floodfill algorithm
         srand ( time(NULL) );
         //Initialize floodfill parameters and variables
-        Mat mask;
-        mask.create(imgInput.rows + 2, imgInput.cols + 2, CV_8UC1);
-        mask = Scalar::all(0);
-        int loDiff = 30;
-        int upDiff = 30;
-        //TODO: Set the mask value and connectivity
-        int connectivity = 4;	//4
-        int newMaskVal = 255;	//255
+        Mat imgMask;
+        imgMask.create(imgInput.rows + 2, imgInput.cols + 2, CV_8UC1);
+        imgMask = Scalar::all(0);	//initial it with BLACK
+        int loDiff = 50;	//???30
+        int upDiff = 50;	//???30
+        //Set the mask value and connectivity
+        int connectivity = 8;	//4
+        int newMaskVal = 255;	//255 new color is WHITE
         int flags = connectivity + (newMaskVal << 8 ) + CV_FLOODFILL_FIXED_RANGE + CV_FLOODFILL_MASK_ONLY;
 //        int flags = connectivity + CV_FLOODFILL_FIXED_RANGE + CV_FLOODFILL_MASK_ONLY;
 //        int flags2 = connectivity + (newMaskVal << 8 ) + CV_FLOODFILL_FIXED_RANGE;
 //        int flags2 = connectivity + CV_FLOODFILL_FIXED_RANGE;
         int nSeeds = 28;	//4*7 //10
-        Rect ccomp;
-        cv::Mat input2;
+        Rect rectOut;
+//        cv::Mat input2;
         for(int j = 0; j < nSeeds; j++) {
         	//TODO: To set the seed point properly
             Point seed;
@@ -316,15 +320,26 @@ vector<Plate> DetectRegions::segmentInVertLine(Mat imgInput){
                 seed.x = ptSample4.x + rand()%(int)minSize - (minSize/2);
                 seed.y = ptSample4.y + rand()%(int)minSize - (minSize/2);
             }
-            //TODO: Draw seed point
-//            circle(result, seed, 1, Scalar(0,255,255), -1);	//Draw seed point with Yellow
 
-            floodFill(imgInput, mask, seed, Scalar(0,255,255), &ccomp,	//YELLOW
-            				Scalar(loDiff, loDiff, loDiff), Scalar(upDiff, upDiff, upDiff), flags);
+//            //TODO: DEBUG Draw seed point
+    		if(debug) {
+    			cout << "Seed " << j << " point coordinate=" << seed << "\n";
+    			circle(imgResult, seed, 1, Scalar(0,255,255), -1);	//Draw seed point with YELLOW
+    		}
+
+    		if((seed.x > 0) && (seed.x < imgInput.cols) && (seed.y > 0) && (seed.y < imgInput.rows)) {
+                floodFill(imgInput, imgMask,
+                		seed,
+                		Scalar(0,255,255),
+                		&rectOut,	//newVal=YELLOW is ignored when mask is exist
+                		Scalar(loDiff, loDiff, loDiff),
+                		Scalar(upDiff, upDiff, upDiff),
+                		flags);
+    		}
 
 //            //TODO: Show the result of floodfilling
 //            input.copyTo(input2);
-//            floodFill(input2, seed, Scalar(0,255,255), &ccomp,
+//            floodFill(input2, seed, Scalar(0,255,255), &rectOut,
 //            				Scalar(loDiff, loDiff, loDiff), Scalar(upDiff, upDiff, upDiff), flags2);
         }
 
@@ -337,11 +352,10 @@ vector<Plate> DetectRegions::segmentInVertLine(Mat imgInput){
         //Check new floodfill mask match for a correct patch.
         //Get all points detected for get Minimal rotated Rect
         vector<Point> pointsInterest;
-        Mat_<uchar>::iterator itMask= mask.begin<uchar>();
-        Mat_<uchar>::iterator end= mask.end<uchar>();
-        for( ; itMask!=end; ++itMask)
-        	//TODO: if the point is white???
-            if(*itMask==255)
+        Mat_<uchar>::iterator itMask= imgMask.begin<uchar>();
+        Mat_<uchar>::iterator end= imgMask.end<uchar>();
+        for( ; itMask != end; ++itMask)
+            if(*itMask == 255)	//The WHITE point is contours
                 pointsInterest.push_back(itMask.pos());
 
         RotatedRect rectPlate = minAreaRect(pointsInterest);
@@ -365,8 +379,11 @@ vector<Plate> DetectRegions::segmentInVertLine(Mat imgInput){
         }
     }       
 
-    if(showSteps) 
-        imshow("VertLineContours", imgResult);
+    if(showSteps) {
+		string wndName = "VertLineContours";
+		namedWindow(wndName, WINDOW_NORMAL);
+        imshow(wndName, imgResult);
+    }
 
     return output;
 }

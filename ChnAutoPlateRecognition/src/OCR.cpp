@@ -40,6 +40,7 @@ CharSegment::CharSegment(Mat i, Rect p){
 
 OCR::OCR(){
     showSteps=false;
+    debug=false;
     trained=false;
     saveSegments=false;
     charSize=20;
@@ -48,6 +49,7 @@ OCR::OCR(){
 //Init OCR with training data
 OCR::OCR(string trainFile){
     showSteps=false;
+    debug=false;
     trained=false;
     saveSegments=false;
     charSize=20;
@@ -109,10 +111,10 @@ bool OCR::verifySizes(Mat r){
     //% of pixel in area
     float percPixels=area/bbArea;
 
-    if(showSteps)
+    if(debug) {
         cout << "OCR Verify Char Size:" << "Actual Aspect=" << charAspect << ", Height=" << r.rows << ", NonZeroArea=" << percPixels << "\n"
         	<< "Standard Aspect=" << aspect << "[" << minAspect << "," << maxAspect << "], NonZeroArea=" << nonZeroArea << "\n";
-
+    }
 
     if((percPixels < nonZeroArea) && (charAspect > minAspect) && (charAspect < maxAspect)
     		&& (r.rows >= minHeight) && (r.rows <= maxHeight)) {
@@ -132,12 +134,14 @@ vector<CharSegment> OCR::segment(Plate plate){
 
     //Threshold input image
     Mat img_threshold;
-    //TODO: To make char image clearly
+    //To make char image clearly
 //    threshold(input, img_threshold, 60, 255, CV_THRESH_BINARY_INV);	//Spain
-//    threshold(input, img_threshold, 150, 255, CV_THRESH_BINARY);	//China
-    threshold(input, img_threshold, 160, 255, CV_THRESH_BINARY);	//China
-    if(showSteps)
-        imshow("OCR Segment Threshold", img_threshold);
+//    threshold(input, img_threshold, 150~160, 255, CV_THRESH_BINARY);	//China
+    // TODO: IMPORTANT
+    threshold(input, img_threshold, 175, 255, CV_THRESH_BINARY);	//China
+    if(debug) {
+        imshow("OCR_Threshold_Binary", img_threshold);
+    }
 
     Mat img_contours;
     img_threshold.copyTo(img_contours);
@@ -165,6 +169,7 @@ vector<CharSegment> OCR::segment(Plate plate){
         //Create bounding rect of object
         Rect mr = boundingRect(Mat(*itc));
         rectangle(result, mr, Scalar(0,255,0));	//Possible chars in GREEN
+
         //Crop image
         Mat auxRoi(img_threshold, mr);
         if(verifySizes(auxRoi)){
@@ -175,7 +180,7 @@ vector<CharSegment> OCR::segment(Plate plate){
         ++itc;
     }
 
-    if(showSteps)
+    if(debug)
     {
         cout << "OCR number of chars: " << output.size() << "\n";
         imshow("OCR Chars", result);
@@ -290,8 +295,10 @@ void OCR::drawVisualFeatures(Mat character, Mat hhist, Mat vhist, Mat lowData){
     line(img, Point(0,100), Point(121,100), Scalar(0,0,255));
     line(img, Point(20,0), Point(20,121), Scalar(0,0,255));
 
-    imshow("OCR Visual Features", img);
-    //cvWaitKey(0);
+    if(debug) {
+        imshow("OCR_Char_Features", img);
+        cvWaitKey(0);
+    }
 }
 
 //Extract features of char, input char size is 15*15
@@ -304,8 +311,8 @@ Mat OCR::features(Mat in, int sizeData){
     Mat lowData;
     resize(in, lowData, Size(sizeData, sizeData) );
 
-    if(showSteps)
-        drawVisualFeatures(in, hhist, vhist, lowData);
+    //Show Char Features
+    drawVisualFeatures(in, hhist, vhist, lowData);
     
     //Last 10 is the number of moments components
     int numCols=vhist.cols+hhist.cols+lowData.cols*lowData.cols;

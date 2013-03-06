@@ -50,7 +50,7 @@ int main ( int argc, char** argv )
     bool bSegmentPlateOnly = false;
     bool bSegmentCharOnly = false;
     bool bShowSteps = false;
-    Mat input_image;
+    bool bDebug = false;
 
     //Check if user specify image to process
     if(argc == 2 ) {
@@ -67,6 +67,9 @@ int main ( int argc, char** argv )
 
     	if((strchr(strCmdOpt, '-')) && (strchr(strCmdOpt, 't')))
     		bShowSteps = true;
+
+    	if((strchr(strCmdOpt, '-')) && (strchr(strCmdOpt, 'd')))
+    		bDebug = true;
     } else {
         printf("Usage:\t%s [-s][c][t] image_file\n", argv[0]);
         printf("\t-s: ONLY Segment the plates from image and save to ../tmp\n");
@@ -75,8 +78,10 @@ int main ( int argc, char** argv )
         return 0;
     }        
 
-    //load image  in gray level
-    input_image = imread(filename,1);
+    //Load image in color level
+    Mat imgOriginal = imread(filename, CV_LOAD_IMAGE_COLOR);
+    //TODO: Preprocess and scale to width < 1000 and height < 1000
+//    Mat imgScale =
 
     string filename_whithoutExt=getFilename(filename);
     cout << "Working with file: "<< filename_whithoutExt << "\n";
@@ -88,7 +93,8 @@ int main ( int argc, char** argv )
     detectRegions.saveRegions = bSegmentPlateOnly;
     // Set showSteps to show each step
     detectRegions.showSteps = bShowSteps;
-    vector<Plate> possible_regions1 = detectRegions.segmentInVertLine(input_image);
+    detectRegions.debug = bDebug;
+    vector<Plate> possible_regions1 = detectRegions.segmentInVertLine(imgOriginal);
 
     //Detect possibles plate regions in method2
     DetectRectangle detectRectangle;
@@ -97,7 +103,8 @@ int main ( int argc, char** argv )
     detectRectangle.saveRegions = bSegmentPlateOnly;
     // Set showSteps to show each step
     detectRectangle.showSteps = bShowSteps;
-    vector<Plate> possible_regions2 = detectRectangle.segmentInRectangle(input_image);
+    detectRectangle.debug = bDebug;
+    vector<Plate> possible_regions2 = detectRectangle.segmentInRectangle(imgOriginal);
 
     //Combile two vector of plates
     possible_regions1.insert(possible_regions1.end(), possible_regions2.begin(), possible_regions2.end());
@@ -147,6 +154,7 @@ int main ( int argc, char** argv )
 		ocr.saveSegments = bSegmentCharOnly;
 		//If show each steps
 		ocr.showSteps = bShowSteps;
+		ocr.debug = bDebug;
 		ocr.filename = filename_whithoutExt;
 		for(int i=0; i< plates.size(); i++){
 			Plate plate=plates[i];
@@ -159,8 +167,8 @@ int main ( int argc, char** argv )
 				cout << "License plate #"<< i+1 << " number: "<< licensePlate << "\n";
 				cout << "================================================\n";
 				//Show the result
-				rectangle(input_image, plate.position, Scalar(0,0,200));
-				putText(input_image, licensePlate, Point(plate.position.x, plate.position.y), CV_FONT_HERSHEY_SIMPLEX, 1, Scalar(0,0,200),2);
+				rectangle(imgOriginal, plate.position, Scalar(0,0,200));
+				putText(imgOriginal, licensePlate, Point(plate.position.x, plate.position.y), CV_FONT_HERSHEY_SIMPLEX, 1, Scalar(0,0,200),2);
 				if(bShowSteps){
 					imshow("Detected Plate", plate.plateImg);
 					cvWaitKey(0);
@@ -170,7 +178,9 @@ int main ( int argc, char** argv )
 
 		// To show the final result
 		if(! bSegmentCharOnly) {
-			imshow("Plate Detected", input_image);
+			string wndName = "PlateDetected";
+			namedWindow(wndName, WINDOW_AUTOSIZE);
+			imshow(wndName, imgOriginal);
 		}
     }
 

@@ -27,6 +27,7 @@ class DetectRegions{
         string filename;
         bool saveRegions;
         bool showSteps;
+        bool debug;
         void setFilename(string f);
         vector<Plate> segmentInVertLine(Mat imgInput);
     private:

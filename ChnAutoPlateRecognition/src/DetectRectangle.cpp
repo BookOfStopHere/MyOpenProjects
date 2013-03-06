@@ -309,7 +309,7 @@ vector<Plate> DetectRectangle::segmentInRectangle (Mat imgMat)
 	gStorage = cvCreateMemStorage(0);
 	gImg = cvCloneImage(&imgSrc);
 
-	cvNamedWindow(wndname, 1);
+	cvNamedWindow(wndname, CV_WINDOW_NORMAL);
 
 	if (gImg) {
 		CvSeq* squares = findSquares4(gImg, gStorage);
@@ -323,7 +323,9 @@ vector<Plate> DetectRectangle::segmentInRectangle (Mat imgMat)
 		cvStartReadSeq(squares, &reader, 0);
 
 		// read 4 sequence elements at a time (all vertices of a square)
-		printf("Found %d rectangles in image\n", squares->total / 4);
+		if(debug) {
+			printf("DetectRectangle found %d rectangles in image %s\n", squares->total / 4, filename.c_str());
+		}
 
 		for (i = 0; i < squares->total; i += 4)
 		{
@@ -354,6 +356,10 @@ vector<Plate> DetectRectangle::segmentInRectangle (Mat imgMat)
 			// convert to rotatedRect and save to output
 			CvBox2D box = cvMinAreaRect2(seqRect, NULL);
 			RotatedRect rectPlate = RotatedRect(box);
+
+			if(debug) {
+				printf("Rect #%d center[x=%f, y=%f]\n", i/4, rectPlate.center.x, rectPlate.center.y);
+			}
 
 			Mat imgGray = cropRectOfPlate(imgMat, rectPlate);
 			if(imgGray.total() != 0) {

@@ -37,12 +37,13 @@ class OCR{
     public:
         bool showSteps;
         bool saveSegments;
+        bool debug;
         string filename;
         static const int numOfChars;
 //        static const char strChars[];	//non HZ
         static const string strChars[];	//HZ
-        OCR(string trainFile);
         OCR();
+        OCR(string trainFile);
         string run(Plate *input, int idx);
         int charSize;
         Mat preprocessChar(Mat in);

@@ -26,7 +26,7 @@ void pickPoint (int event, int x, int y, int, void* );
 /**
  * @function main
  */
-int main( int, char** argv )
+int main6 ( int, char** argv )
 {
   /// Read the image
   src = imread( argv[1], 1 );

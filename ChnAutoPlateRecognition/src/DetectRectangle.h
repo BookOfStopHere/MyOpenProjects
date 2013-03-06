@@ -25,6 +25,7 @@ class DetectRectangle {
         string filename;
         bool saveRegions;
         bool showSteps;
+        bool debug;
         void setFilename(string f);
         vector<Plate> segmentInRectangle (Mat imgMat);
     private:
