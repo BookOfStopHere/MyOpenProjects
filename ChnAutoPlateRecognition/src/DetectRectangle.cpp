@@ -352,6 +352,14 @@ vector<Plate> DetectRectangle::segmentInRectangle (Mat imgMat)
 
 			// draw the square as a closed polyline with GREEN
 			cvPolyLine(imgCopy, &pntRect, &pntCount, 1, 1, CV_RGB(0, 255, 0), 1, CV_AA, 0);
+			CvFont font;
+			double hScale = 1.0;
+			double vScale = 1.0;
+			int lineWidth = 1;
+			cvInitFont( &font, CV_FONT_HERSHEY_SIMPLEX | CV_FONT_ITALIC, hScale, vScale, 0, lineWidth);
+			char buffer [sizeof(int)+1];
+			sprintf(buffer, "%d", i/4);
+			cvPutText(imgCopy, buffer, pntRect[0], &font, cvScalar( 0, 255, 0 ) );
 
 			// convert to rotatedRect and save to output
 			CvBox2D box = cvMinAreaRect2(seqRect, NULL);
@@ -364,7 +372,7 @@ vector<Plate> DetectRectangle::segmentInRectangle (Mat imgMat)
 			Mat imgGray = cropRectOfPlate(imgMat, rectPlate);
 			if(imgGray.total() != 0) {
 				//
-				if(showSteps) {
+				if(debug) {
 					imshow(wndname, imgGray);
 					cvWaitKey(0);
 				}

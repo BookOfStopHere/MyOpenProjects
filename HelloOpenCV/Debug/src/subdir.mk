@@ -9,6 +9,7 @@ CPP_SRCS += \
 ../src/DetectRectangle.cpp \
 ../src/Geometric_Transforms_Demo.cpp \
 ../src/HelloOpenCV.cpp \
+../src/PrintFilesInDir.cpp \
 ../src/ResizeImage.cpp \
 ../src/TestHZ.cpp \
 ../src/calcBackProject_Demo2.cpp 
@@ -19,6 +20,7 @@ OBJS += \
 ./src/DetectRectangle.o \
 ./src/Geometric_Transforms_Demo.o \
 ./src/HelloOpenCV.o \
+./src/PrintFilesInDir.o \
 ./src/ResizeImage.o \
 ./src/TestHZ.o \
 ./src/calcBackProject_Demo2.o 
@@ -29,6 +31,7 @@ CPP_DEPS += \
 ./src/DetectRectangle.d \
 ./src/Geometric_Transforms_Demo.d \
 ./src/HelloOpenCV.d \
+./src/PrintFilesInDir.d \
 ./src/ResizeImage.d \
 ./src/TestHZ.d \
 ./src/calcBackProject_Demo2.d 

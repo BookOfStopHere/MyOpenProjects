@@ -18,6 +18,16 @@
 using namespace std;
 using namespace cv;
 
+#ifndef IMG_MAX_WIDTH
+#define IMG_MAX_WIDTH 1000
+#endif
+
+#ifndef IMG_MAX_HEIGHT
+#define IMG_MAX_HEIGHT 800
+#endif
+
+Mat scalePreprocess(Mat imgSrc);
+
 class Plate{
     public:
         Plate();

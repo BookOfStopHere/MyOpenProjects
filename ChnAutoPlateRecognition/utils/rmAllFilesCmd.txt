@@ -1,0 +1,12 @@
+用ls命令看看匹配的文件是不是都可以删：
+find . -name "*.o" -exec ls {} \;
+删除当前目录下所有的*.o文件：
+find . -name "*.o" -exec rm -f {} \;
+可以在删除前给提示，删除则输入y键：
+find . -name "*.o" -ok rm -f {} \;
+不过如果文件多的话就不适合了。
+有些类似的例子：
+删除更改时间在5日以前的文件：
+find . -type f -mtime +5 -exec rm -f {} \;
+删除前给提示
+find . -type f -mtime +5 -ok rm -f {} \;

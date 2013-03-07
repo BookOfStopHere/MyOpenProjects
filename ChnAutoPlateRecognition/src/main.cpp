@@ -80,8 +80,8 @@ int main ( int argc, char** argv )
 
     //Load image in color level
     Mat imgOriginal = imread(filename, CV_LOAD_IMAGE_COLOR);
-    //TODO: Preprocess and scale to width < 1000 and height < 1000
-//    Mat imgScale =
+    //Preprocess and scale to width < 1000 and height < 1000
+    Mat imgScale = scalePreprocess(imgOriginal);
 
     string filename_whithoutExt=getFilename(filename);
     cout << "Working with file: "<< filename_whithoutExt << "\n";
@@ -94,7 +94,7 @@ int main ( int argc, char** argv )
     // Set showSteps to show each step
     detectRegions.showSteps = bShowSteps;
     detectRegions.debug = bDebug;
-    vector<Plate> possible_regions1 = detectRegions.segmentInVertLine(imgOriginal);
+    vector<Plate> possible_regions1 = detectRegions.segmentInVertLine(imgScale);
 
     //Detect possibles plate regions in method2
     DetectRectangle detectRectangle;
@@ -104,7 +104,7 @@ int main ( int argc, char** argv )
     // Set showSteps to show each step
     detectRectangle.showSteps = bShowSteps;
     detectRectangle.debug = bDebug;
-    vector<Plate> possible_regions2 = detectRectangle.segmentInRectangle(imgOriginal);
+    vector<Plate> possible_regions2 = detectRectangle.segmentInRectangle(imgScale);
 
     //Combile two vector of plates
     possible_regions1.insert(possible_regions1.end(), possible_regions2.begin(), possible_regions2.end());
@@ -167,8 +167,8 @@ int main ( int argc, char** argv )
 				cout << "License plate #"<< i+1 << " number: "<< licensePlate << "\n";
 				cout << "================================================\n";
 				//Show the result
-				rectangle(imgOriginal, plate.position, Scalar(0,0,200));
-				putText(imgOriginal, licensePlate, Point(plate.position.x, plate.position.y), CV_FONT_HERSHEY_SIMPLEX, 1, Scalar(0,0,200),2);
+				rectangle(imgScale, plate.position, Scalar(0,0,200));
+				putText(imgScale, licensePlate, Point(plate.position.x, plate.position.y), CV_FONT_HERSHEY_SIMPLEX, 1, Scalar(0,0,200),2);
 				if(bShowSteps){
 					imshow("Detected Plate", plate.plateImg);
 					cvWaitKey(0);
@@ -180,7 +180,7 @@ int main ( int argc, char** argv )
 		if(! bSegmentCharOnly) {
 			string wndName = "PlateDetected";
 			namedWindow(wndName, WINDOW_AUTOSIZE);
-			imshow(wndName, imgOriginal);
+			imshow(wndName, imgScale);
 		}
     }
 

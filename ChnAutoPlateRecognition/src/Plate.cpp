@@ -50,3 +50,58 @@ string Plate::str(){
     }
     return result;
 }
+
+// GLOBAL HELPER FUNCTION
+// Preprocess image, scale to specified size
+Mat scalePreprocess(Mat imgSrc)
+{
+    IplImage *pIplSrc = NULL;
+    IplImage *pIplDst = NULL;
+    CvSize dstSize;
+    double scaleFactor;
+    Mat imgDst;
+
+    // Input is Mat
+//    Mat imgSrc = imread("building.jpg", CV_LOAD_IMAGE_COLOR);
+
+    IplImage iplSrc = IplImage(imgSrc);
+    pIplSrc = &iplSrc;
+//    pIplSrc = cvLoadImage("building.jpg");
+
+    if (pIplSrc == NULL)
+    {
+        cout << "No Image!" << endl;
+        return imgDst;
+    }
+
+    // Calculate the scale factor
+    int imgActMax = (pIplSrc->width >= pIplSrc->height) ? pIplSrc->width: pIplSrc->height;
+    int imgLower = (IMG_MAX_WIDTH < IMG_MAX_HEIGHT) ? IMG_MAX_WIDTH: IMG_MAX_HEIGHT;
+    if(imgActMax > imgLower) {
+    	scaleFactor = (double)imgLower / (double)imgActMax;
+    } else {
+    	scaleFactor = 1.0;
+    }
+//    cout << "scaleFactor=" << scaleFactor << endl;
+
+    // Scale the image
+    dstSize.width = pIplSrc->width * scaleFactor;
+    dstSize.height = pIplSrc->height * scaleFactor;
+//    cout << "dstSize=" << dstSize.width << "," << dstSize.height << endl;
+
+    pIplDst = cvCreateImage(dstSize, pIplSrc->depth, pIplSrc->nChannels);    //构造目标图象
+    cvResize(pIplSrc, pIplDst, CV_INTER_LINEAR);                         //缩放源图像到目标图像
+
+    // Output is Mat and copy data
+    imgDst = Mat(pIplDst, TRUE);
+
+//    // Show image
+//    imshow("imgSrc", imgSrc);
+//    imshow("imgDst", imgDst);
+//	cvWaitKey(-1);                    //等待用户响应
+
+	cvReleaseImage(&pIplDst);            //释放目标图像占用的内存
+
+    return imgDst;
+}
+
