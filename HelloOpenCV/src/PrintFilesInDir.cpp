@@ -39,7 +39,7 @@ void printdir(char* dir, int depth) {
 	closedir(dp);
 }
 
-int main(int argc, char* argv[]) {
+int main10 (int argc, char* argv[]) {
 	char *topdir = ".";
 	if (argc >= 2)
 		topdir = argv[1];

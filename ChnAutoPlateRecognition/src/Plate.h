@@ -32,9 +32,11 @@ class Plate{
     public:
         Plate();
         Plate(Mat img, Rect pos);
-        string str();
+        string getPlateNumStr();
         Rect position;
         Mat plateImg;
+    	bool isValidPlate;
+        void setPlateStatus(bool status);
 //        vector<char> chars;	//for char not contained HZ
         vector<string> chars;	//for char contained HZ
         vector<Rect> charsPos;

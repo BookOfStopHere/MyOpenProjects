@@ -427,6 +427,33 @@ string OCR::run(Plate *input, int idx){
             input->charsPos.push_back(segments[i].pos);
         }
     }
+    //Check if valid Chinese plate
+    string strPlate = input->getPlateNumStr();
+    if(strPlate.length() == 9) {
+    	//Check if begin with HZ and ending with number and alphabet
+    	for(int i=0; i<strPlate.length(); i++) {
+//            printf("strPlate[i]=%d ", strPlate[i]);
+    		if(i <= 2) {
+    			//Is NOT HZ
+    			if((strPlate[i] > 0) && (strPlate[i] < 255)) {
+    				input->setPlateStatus(false);
+    				return "-";
+    			}
+    		} else {
+    			//Is NOT number and alphabet
+    			if((strPlate[i] < 0) || (strPlate[i] > 255)) {
+    				input->setPlateStatus(false);
+    				return "-";
+    			}
+    		}
+    	}
+    	//Is valid plate number
+    	input->setPlateStatus(true);
+    } else {
+    	//Is invalid plate number
+    	input->setPlateStatus(false);
+    }
+
     return "-";//input->str();
 }
 

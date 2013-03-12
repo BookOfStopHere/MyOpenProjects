@@ -14,6 +14,7 @@
 
 #include "DetectRegions.h"
 #include "OCR.h"
+#include "CvxText.h"
 
 using namespace std;
 using namespace cv;
@@ -162,16 +163,41 @@ int main ( int argc, char** argv )
 			string plateNumber = ocr.run(&plate, i);
 
 			if(! bSegmentCharOnly) {
-				string licensePlate = plate.str();
-				cout << "================================================\n";
-				cout << "License plate #"<< i+1 << " number: "<< licensePlate << "\n";
-				cout << "================================================\n";
-				//Show the result
-				rectangle(imgScale, plate.position, Scalar(0,0,200));
-				putText(imgScale, licensePlate, Point(plate.position.x, plate.position.y), CV_FONT_HERSHEY_SIMPLEX, 1, Scalar(0,0,200),2);
-				if(bShowSteps){
-					imshow("Detected Plate", plate.plateImg);
-					cvWaitKey(0);
+				if(plate.isValidPlate) {
+					string licensePlate = plate.getPlateNumStr();
+					cout << "================================================\n";
+					cout << "License plate #"<< i+1 << " number: "<< licensePlate << "\n";
+					cout << "================================================\n";
+
+//					putText(imgScale, licensePlate, Point(plate.position.x, plate.position.y), CV_FONT_HERSHEY_SIMPLEX, 1, Scalar(0,0,200),2);
+					if(bShowSteps){
+//						imshow("Detected Plate", plate.plateImg);
+//						cvWaitKey(0);
+
+						//Show the result in image
+						rectangle(imgScale, plate.position, Scalar(0,0,200));
+						IplImage img = IplImage(imgScale);
+
+						// "wqy-microhei.ttc"为文泉驿黑体
+						CvxText text("/usr/share/fonts/truetype/wqy/wqy-microhei.ttc");
+						const char *msg = licensePlate.c_str();
+						float p = 0.8;
+						text.setFont(NULL, NULL, NULL, &p);   // 透明处理
+						text.putText(&img, msg, cvPoint(plate.position.x, plate.position.y - 5), CV_RGB(255,0,0));
+
+					   // 定义窗口，并显示影象
+					   cvNamedWindow( "Detected_Plate", CV_WINDOW_AUTOSIZE );    //创建用于显示源图像的窗口
+					   cvShowImage( "Detected_Plate", &img );        //显示源图像
+					   cvWaitKey(-1);                    //等待用户响应
+					   cvDestroyWindow( "Detected_Plate" );        //销毁窗口“img”
+					}
+				} else {
+					if(bDebug) {
+						string licensePlate = plate.getPlateNumStr();
+						cout << "================================================\n";
+						cout << "License plate #"<< i+1 << " number: "<< licensePlate << "\n";
+						cout << "================================================\n";
+					}
 				}
 			}
 		}

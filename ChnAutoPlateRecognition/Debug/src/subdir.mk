@@ -4,6 +4,7 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
+../src/CvxText.cpp \
 ../src/DetectRectangle.cpp \
 ../src/DetectRegions.cpp \
 ../src/OCR.cpp \
@@ -14,6 +15,7 @@ CPP_SRCS += \
 ../src/trainSVM.cpp 
 
 OBJS += \
+./src/CvxText.o \
 ./src/DetectRectangle.o \
 ./src/DetectRegions.o \
 ./src/OCR.o \
@@ -24,6 +26,7 @@ OBJS += \
 ./src/trainSVM.o 
 
 CPP_DEPS += \
+./src/CvxText.d \
 ./src/DetectRectangle.d \
 ./src/DetectRegions.d \
 ./src/OCR.d \
@@ -38,7 +41,7 @@ CPP_DEPS += \
 src/%.o: ../src/%.cpp
 	@echo 'Building file: $<'
 	@echo 'Invoking: GCC C++ Compiler'
-	g++ -I/usr/local/include -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -o "$@" "$<"
+	g++ -I/usr/local/include -I/usr/include/freetype2 -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -o "$@" "$<"
 	@echo 'Finished building: $<'
 	@echo ' '
 

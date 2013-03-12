@@ -7,14 +7,20 @@
 #include "Plate.h"
 
 Plate::Plate(){
+	isValidPlate = false;
 }
 
 Plate::Plate(Mat img, Rect pos){
-    plateImg=img;
-    position=pos;
+	isValidPlate = false;
+    plateImg = img;
+    position = pos;
 }
 
-string Plate::str(){
+void Plate::setPlateStatus(bool status) {
+	isValidPlate = status;
+}
+
+string Plate::getPlateNumStr(){
     string result="";
 
     //Order numbers
