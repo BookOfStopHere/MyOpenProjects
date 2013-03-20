@@ -180,10 +180,13 @@ int main ( int argc, char** argv )
 
 						// "wqy-microhei.ttc"为文泉驿黑体
 						CvxText text("/usr/share/fonts/truetype/wqy/wqy-microhei.ttc");
-						const char *msg = licensePlate.c_str();
+					    const char *pmbMsg = licensePlate.c_str();
+//					    wchar_t *pwcMsg = (wchar_t *)malloc( sizeof(wchar_t) * (licensePlate.length() + 1));
+					    wchar_t *pwcMsg = (wchar_t *)malloc( sizeof(wchar_t));
+					    int i = mbstowcs( pwcMsg, pmbMsg, MB_CUR_MAX );
 						float p = 0.8;
 						text.setFont(NULL, NULL, NULL, &p);   // 透明处理
-						text.putText(&img, msg, cvPoint(plate.position.x, plate.position.y - 5), CV_RGB(255,0,0));
+						text.putText(&img, pwcMsg, cvPoint(plate.position.x, plate.position.y - 5), CV_RGB(255,0,0));
 
 					   // 定义窗口，并显示影象
 					   cvNamedWindow( "Detected_Plate", CV_WINDOW_AUTOSIZE );    //创建用于显示源图像的窗口

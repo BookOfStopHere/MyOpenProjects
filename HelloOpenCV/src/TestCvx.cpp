@@ -14,7 +14,8 @@ int main(int argc, char *argv[])
 	  // "wqy-microhei.ttc"为文泉驿黑体
 	  CvxText text("/usr/share/fonts/truetype/wqy/wqy-microhei.ttc");
 
-	  const char *msg = "在 OpenCV 中 输 出 汉 字！";
+//	  const char *msg = "输出 汉 字在OpenCV中！";
+	  const wchar_t *msg = L"在OpenCV中输出汉字！";
 
 	  float p = 0.8;
 	  text.setFont(NULL, NULL, NULL, &p);   // 透明处理

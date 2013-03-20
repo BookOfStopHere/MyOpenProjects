@@ -108,10 +108,9 @@ int CvxText::putText(IplImage *img, const char *text, CvPoint pos, CvScalar colo
    {
 	  wchar_t wc = text[i];
 
-	  // 解析双字节符号 ? 三字节？
+	  // 解析双字节符号
 	  if(!isascii(wc))
-//		  mbtowc(&wc, &text[i++], 2);
-		  mbtowc(&wc, &text[i++], 3);
+		  mbtowc(&wc, &text[i++], 2);
 
 	  // 输出当前的字符
 	  putWChar(img, wc, pos, color);
