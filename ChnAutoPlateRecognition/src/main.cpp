@@ -157,6 +157,7 @@ int main ( int argc, char** argv )
 		ocr.showSteps = bShowSteps;
 		ocr.debug = bDebug;
 		ocr.filename = filename_whithoutExt;
+		int nPosY = 0;
 		for(int i=0; i< plates.size(); i++){
 			Plate plate=plates[i];
 
@@ -169,30 +170,45 @@ int main ( int argc, char** argv )
 					cout << "License plate #"<< i+1 << " number: "<< licensePlate << "\n";
 					cout << "================================================\n";
 
-//					putText(imgScale, licensePlate, Point(plate.position.x, plate.position.y), CV_FONT_HERSHEY_SIMPLEX, 1, Scalar(0,0,200),2);
 					if(bShowSteps){
-//						imshow("Detected Plate", plate.plateImg);
-//						cvWaitKey(0);
-
 						//Show the result in image
-						rectangle(imgScale, plate.position, Scalar(0,0,200));
+						rectangle(imgScale, plate.position, Scalar(0,0,255));
 						IplImage img = IplImage(imgScale);
 
 						// "wqy-microhei.ttc"为文泉驿黑体
 						CvxText text("/usr/share/fonts/truetype/wqy/wqy-microhei.ttc");
+						// Convert the MultiByte to WideChar string
 					    const char *pmbMsg = licensePlate.c_str();
-//					    wchar_t *pwcMsg = (wchar_t *)malloc( sizeof(wchar_t) * (licensePlate.length() + 1));
-					    wchar_t *pwcMsg = (wchar_t *)malloc( sizeof(wchar_t));
-					    int i = mbstowcs( pwcMsg, pmbMsg, MB_CUR_MAX );
-						float p = 0.8;
-						text.setFont(NULL, NULL, NULL, &p);   // 透明处理
-						text.putText(&img, pwcMsg, cvPoint(plate.position.x, plate.position.y - 5), CV_RGB(255,0,0));
+					    wchar_t *pwcMsg = NULL;
+						size_t size = mbstowcs(NULL, pmbMsg, 0);
+						pwcMsg = new wchar_t[size+1];
+						if (pwcMsg)
+						{
+							memset(pwcMsg, 0, size * sizeof(wchar_t));
+							size_t ret = mbstowcs(pwcMsg, pmbMsg, size+1);
+							if (ret == -1)
+							{
+								delete[] pwcMsg;
+								pwcMsg = NULL;
+							}
+						}
 
-					   // 定义窗口，并显示影象
-					   cvNamedWindow( "Detected_Plate", CV_WINDOW_AUTOSIZE );    //创建用于显示源图像的窗口
-					   cvShowImage( "Detected_Plate", &img );        //显示源图像
-					   cvWaitKey(-1);                    //等待用户响应
-					   cvDestroyWindow( "Detected_Plate" );        //销毁窗口“img”
+						float p = 1;
+						text.setFont(NULL, NULL, NULL, &p);   // 设置字体透明处理
+						if(nPosY == 0) {
+							nPosY = plate.position.y - 5;
+						} else {
+							nPosY = nPosY - 25;
+						}
+						text.putText(&img, pwcMsg, cvPoint(plate.position.x, nPosY), CV_RGB(255,0,0));
+
+						if(bDebug) {
+							// 定义窗口，并显示影象
+							cvNamedWindow( "Detected_Plate", CV_WINDOW_AUTOSIZE );
+							cvShowImage( "Detected_Plate", &img );
+							cvWaitKey(-1);
+							cvDestroyWindow( "Detected_Plate" );
+						}
 					}
 				} else {
 					if(bDebug) {
