@@ -4,7 +4,7 @@
 
 #include "CvxText.h"
 
-int main(int argc, char *argv[])
+int main13 (int argc, char *argv[])
 {
    // 打开一个影象
    IplImage *img = cvLoadImage("building.jpg", 1);

@@ -14,7 +14,8 @@ CPP_SRCS += \
 ../src/ResizeImage.cpp \
 ../src/TestCvx.cpp \
 ../src/TestHZ.cpp \
-../src/calcBackProject_Demo2.cpp 
+../src/calcBackProject_Demo2.cpp \
+../src/peopledetect.cpp 
 
 OBJS += \
 ./src/CvxText.o \
@@ -27,7 +28,8 @@ OBJS += \
 ./src/ResizeImage.o \
 ./src/TestCvx.o \
 ./src/TestHZ.o \
-./src/calcBackProject_Demo2.o 
+./src/calcBackProject_Demo2.o \
+./src/peopledetect.o 
 
 CPP_DEPS += \
 ./src/CvxText.d \
@@ -40,7 +42,8 @@ CPP_DEPS += \
 ./src/ResizeImage.d \
 ./src/TestCvx.d \
 ./src/TestHZ.d \
-./src/calcBackProject_Demo2.d 
+./src/calcBackProject_Demo2.d \
+./src/peopledetect.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes
