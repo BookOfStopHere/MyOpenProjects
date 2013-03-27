@@ -18,7 +18,7 @@ using namespace std;
 //             "./peopledetect (<image_filename> | <image_list>.txt)\n\n");
 // }
 
-int main(int argc, char** argv)
+int main14 (int argc, char** argv)
 {
     Mat img;
     FILE* f = 0;
