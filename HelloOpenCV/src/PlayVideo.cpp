@@ -15,7 +15,7 @@
 using namespace std;
 using namespace cv;
 
-int main(int argc, char** argv) {
+int main15 (int argc, char** argv) {
 	string filename;
 
     if(argc == 2 ) {
@@ -46,7 +46,7 @@ int main(int argc, char** argv) {
 	cout << "整个视频共" << totalFrameNumber << "帧" << endl;
 
 	//设置开始帧()
-	long frameToStart = 300;
+	long frameToStart = 0;
 	capture.set(CV_CAP_PROP_POS_FRAMES, frameToStart);
 	cout << "从第" << frameToStart << "帧开始读" << endl;
 
@@ -69,7 +69,7 @@ int main(int argc, char** argv) {
 	//承载每一帧的图像
 	Mat frame;
 	//显示每一帧的窗口
-	namedWindow("Extracted frame");
+	namedWindow("Playing...");
 	//两帧间的间隔时间:
 	//int delay = 1000/rate;
 	int delay = 1000 / rate;
@@ -91,11 +91,10 @@ int main(int argc, char** argv) {
 		}
 
 		//这里加滤波程序
-		imshow("Extracted frame", frame);
-		filter2D(frame, frame, -1, kernel);
-
-		imshow("after filter", frame);
-		cout << "正在读取第" << currentFrame << "帧" << endl;
+		imshow("Playing...", frame);
+//		filter2D(frame, frame, -1, kernel);
+//		imshow("after filter", frame);
+//		cout << "正在读取第" << currentFrame << "帧" << endl;
 		//waitKey(int delay=0)当delay ≤ 0时会永远等待；当delay>0时会等待delay毫秒
 		//当时间结束前没有按键按下时，返回值为-1；否则返回按键
 

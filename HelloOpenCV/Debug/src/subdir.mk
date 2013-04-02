@@ -7,6 +7,7 @@ CPP_SRCS += \
 ../src/CvxText.cpp \
 ../src/DetectCircle.cpp \
 ../src/DetectLine.cpp \
+../src/DetectPeople.cpp \
 ../src/DetectRectangle.cpp \
 ../src/Geometric_Transforms_Demo.cpp \
 ../src/HelloOpenCV.cpp \
@@ -15,13 +16,14 @@ CPP_SRCS += \
 ../src/ResizeImage.cpp \
 ../src/TestCvx.cpp \
 ../src/TestHZ.cpp \
-../src/calcBackProject_Demo2.cpp \
-../src/peopledetect.cpp 
+../src/WriteVideo.cpp \
+../src/calcBackProject_Demo2.cpp 
 
 OBJS += \
 ./src/CvxText.o \
 ./src/DetectCircle.o \
 ./src/DetectLine.o \
+./src/DetectPeople.o \
 ./src/DetectRectangle.o \
 ./src/Geometric_Transforms_Demo.o \
 ./src/HelloOpenCV.o \
@@ -30,13 +32,14 @@ OBJS += \
 ./src/ResizeImage.o \
 ./src/TestCvx.o \
 ./src/TestHZ.o \
-./src/calcBackProject_Demo2.o \
-./src/peopledetect.o 
+./src/WriteVideo.o \
+./src/calcBackProject_Demo2.o 
 
 CPP_DEPS += \
 ./src/CvxText.d \
 ./src/DetectCircle.d \
 ./src/DetectLine.d \
+./src/DetectPeople.d \
 ./src/DetectRectangle.d \
 ./src/Geometric_Transforms_Demo.d \
 ./src/HelloOpenCV.d \
@@ -45,8 +48,8 @@ CPP_DEPS += \
 ./src/ResizeImage.d \
 ./src/TestCvx.d \
 ./src/TestHZ.d \
-./src/calcBackProject_Demo2.d \
-./src/peopledetect.d 
+./src/WriteVideo.d \
+./src/calcBackProject_Demo2.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes
